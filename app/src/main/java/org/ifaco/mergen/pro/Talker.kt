@@ -50,7 +50,7 @@ class Talker(
                             write(Base64.decode(res, Base64.DEFAULT))
                             close()
                         }
-                        handler?.obtainMessage(Panel.Action.PRONOUNCE.ordinal, temp.toUri())
+                        handler?.obtainMessage(Panel.Action.TALK.ordinal, temp.toUri())
                             ?.sendToTarget()
                         temp.deleteOnExit()
                     }

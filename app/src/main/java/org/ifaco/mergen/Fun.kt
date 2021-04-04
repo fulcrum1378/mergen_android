@@ -3,6 +3,7 @@ package org.ifaco.mergen
 import android.animation.*
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.PorterDuff
@@ -24,6 +25,7 @@ class Fun {
     companion object {
         @SuppressLint("StaticFieldLeak")
         lateinit var c: Context
+        lateinit var sp: SharedPreferences
         lateinit var fRegular: Typeface
         lateinit var fBold: Typeface
         var dirLtr = true
@@ -35,6 +37,7 @@ class Fun {
             dm = that.resources.displayMetrics
             dirLtr = c.resources.getBoolean(R.bool.dirLtr)
             if (!dirLtr) root.layoutDirection = View.LAYOUT_DIRECTION_RTL
+            sp =  that.getPreferences(Context.MODE_PRIVATE)
 
             // Fonts
             fRegular = fonts(Fonts.REGULAR)

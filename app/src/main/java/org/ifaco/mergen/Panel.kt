@@ -3,9 +3,11 @@ package org.ifaco.mergen
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.*
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import org.ifaco.mergen.Fun.Companion.permResult
+import org.ifaco.mergen.com.Client
 import org.ifaco.mergen.com.Hearer
 import org.ifaco.mergen.com.Watcher
 import org.ifaco.mergen.databinding.PanelBinding
@@ -21,12 +23,12 @@ class Panel : AppCompatActivity() {
     lateinit var tak: Talker
     lateinit var vis: Watcher
     lateinit var ear: Hearer
+    lateinit var cli: Client
 
     companion object {
         var handler: Handler? = null
         var mp: MediaPlayer? = null
     }
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,13 +42,18 @@ class Panel : AppCompatActivity() {
             override fun handleMessage(msg: Message) {
                 when (msg.what) {
                     Action.WRITE.ordinal -> msg.obj?.let { b.say.setText("$it") }
-                    Action.SPEAK.ordinal -> {
+                    Action.TALK.ordinal -> {
                         mp = MediaPlayer.create(this@Panel, msg.obj as Uri)
                         mp?.setOnPreparedListener { mp?.start() }
                         mp?.setOnCompletionListener { mp?.release(); mp = null }
                     }
                     //Action.HEAR.ordinal -> ear.start()
                     Action.WATCH.ordinal -> vis.start()
+                    Action.TOAST.ordinal -> try {
+                        Toast.makeText(Fun.c, msg.obj as String, Toast.LENGTH_SHORT).show()
+                    } catch (ignored: Exception) {
+                        Toast.makeText(Fun.c, "INVALID MESSAGE", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         }
@@ -58,6 +65,7 @@ class Panel : AppCompatActivity() {
         // Communication
         vis = Watcher(this, b.preview)
         ear = Hearer(this)
+        cli = Client(this)
     }
 
     override fun onResume() {
@@ -73,6 +81,10 @@ class Panel : AppCompatActivity() {
     override fun onDestroy() {
         vis.destroy()
         ear.destroy()
+        try {
+            cli.interrupt()
+        } catch (ignored: java.lang.Exception) {
+        }
         try {
             mp?.release()
         } catch (ignored: Exception) {
@@ -93,5 +105,5 @@ class Panel : AppCompatActivity() {
         }
     }
 
-    enum class Action { WRITE, SPEAK, HEAR, WATCH }
+    enum class Action { WRITE, TALK, HEAR, WATCH, TOAST }
 }

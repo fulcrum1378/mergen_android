@@ -14,7 +14,7 @@ import org.ifaco.mergen.databinding.PanelBinding
 import org.ifaco.mergen.pro.Talker
 import org.ifaco.mergen.pro.Writer
 
-// adb connect 192.168.1.4:43355
+// adb connect 192.168.1.4:
 
 class Panel : AppCompatActivity() {
     lateinit var b: PanelBinding

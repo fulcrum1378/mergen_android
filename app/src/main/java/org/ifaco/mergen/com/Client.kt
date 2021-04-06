@@ -10,10 +10,7 @@ import org.ifaco.mergen.Panel
 import org.ifaco.mergen.Panel.Companion.handler
 import org.ifaco.mergen.R
 import org.ifaco.mergen.otr.AlertDialogue.Companion.alertDialogue2
-import java.io.BufferedReader
-import java.io.IOException
-import java.io.InputStreamReader
-import java.io.PrintWriter
+import java.io.*
 import java.lang.Exception
 import java.net.Socket
 
@@ -26,6 +23,7 @@ class Client(val that: Panel) : Thread() {
     companion object {
         const val HOST = "host"
         const val PORT = "port"
+        const val FRAME =  500L // will be multiplied by 2
         val TOAST = Panel.Action.TOAST.ordinal
     }
 
@@ -53,10 +51,10 @@ class Client(val that: Panel) : Thread() {
             socket = Socket(host, port)
             output = PrintWriter(socket.getOutputStream())
             input = BufferedReader(InputStreamReader(socket.getInputStream()))
-            for (x in 1..5) {
-                output!!.write("Hi...")
+            for (x in 1..2) {
+                output!!.write("hey")
                 output!!.flush() // input!!.readLine()?
-                sleep(500)
+                sleep(FRAME)
             }
         } catch (e: IOException) {
             socket?.close()

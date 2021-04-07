@@ -16,6 +16,7 @@ import org.ifaco.mergen.Fun.Companion.c
 import org.ifaco.mergen.Fun.Companion.dm
 import org.ifaco.mergen.Panel
 import java.io.File
+import java.io.OutputStream
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -26,6 +27,7 @@ class Watcher(val that: Panel, val previewView: PreviewView) {
     lateinit var useCaseGroup: UseCaseGroup
     lateinit var preview: Preview
     lateinit var videoCapture: VideoCapture
+    lateinit var imageCapture: ImageCapture
     lateinit var cameraSelector: CameraSelector
     var cameraExecutor: ExecutorService = Executors.newSingleThreadExecutor()
     var canPreview = false
@@ -33,8 +35,11 @@ class Watcher(val that: Panel, val previewView: PreviewView) {
     var recording = false
 
     companion object {
+        lateinit var cli: Client
+
         const val req = 868
         const val perm = Manifest.permission.CAMERA
+        const val PORT = 3772
         val size = Size(1200, 800)
     }
 
@@ -62,12 +67,17 @@ class Watcher(val that: Panel, val previewView: PreviewView) {
                 cameraSelector = CameraSelector.Builder()
                     .requireLensFacing(CameraSelector.LENS_FACING_BACK)
                     .build()
-                videoCapture = VideoCapture.Builder()
+                /*videoCapture = VideoCapture.Builder()
+                    .setMaxResolution(size)
+                    .build()*/
+                imageCapture = ImageCapture.Builder()
+                    .setTargetRotation(that.resources.configuration.orientation)
                     .setMaxResolution(size)
                     .build()
                 useCaseGroup = UseCaseGroup.Builder()
                     .addUseCase(preview)
-                    .addUseCase(videoCapture)
+                    //.addUseCase(videoCapture)
+                    .addUseCase(imageCapture)
                     .setViewPort(
                         ViewPort.Builder(
                             Rational(dm.heightPixels, dm.widthPixels), // HEIGHT * WIDTH
@@ -76,6 +86,11 @@ class Watcher(val that: Panel, val previewView: PreviewView) {
                     )
                     .build()
                 cameraProvider.bindToLifecycle(that, cameraSelector, useCaseGroup)
+                cli = Client(that, PORT, object : Client.Repeat {
+                    override fun execute() {
+                        if (cli.output != null) capture(cli.output!!)
+                    }
+                })
                 // "CameraSelector.DEFAULT_BACK_CAMERA" instead of "cameraSelector"
             } catch (exc: Exception) {
                 Toast.makeText(c, exc.javaClass.name, Toast.LENGTH_SHORT).show()
@@ -91,7 +106,8 @@ class Watcher(val that: Panel, val previewView: PreviewView) {
         previewView.removeAllViews()
     }
 
-    fun resume() {
+    @Suppress("unused")
+    fun resumeRecording() {
         if (!previewing || recording) return
         val vid = File(c.cacheDir, "vision.mp4")
         if (vid.exists()) vid.delete()
@@ -106,13 +122,30 @@ class Watcher(val that: Panel, val previewView: PreviewView) {
             })
     }
 
-    fun pause() {
+    @Suppress("unused")
+    fun pauseRecording() {
         if (!previewing || !recording) return
         videoCapture.stopRecording()
+    }
+
+    fun capture(os: OutputStream) {
+        val outputFileOptions = ImageCapture.OutputFileOptions.Builder(os).build()
+        imageCapture.takePicture(outputFileOptions, cameraExecutor,
+            object : ImageCapture.OnImageSavedCallback {
+                override fun onError(error: ImageCaptureException) {
+                }
+
+                override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
+                }
+            })
     }
 
     fun destroy() {
         if (!canPreview) return
         cameraExecutor.shutdown()
+        try {
+            cli.interrupt()
+        } catch (ignored: Exception) {
+        }
     }
 }

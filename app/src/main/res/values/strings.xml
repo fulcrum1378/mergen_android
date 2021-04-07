@@ -7,7 +7,7 @@
     <string name="proHint">.....</string>
 
     <!-- Client -->
-    <string name="cliDefIP">"192.168.1.9:3772</string>
+    <string name="cliDefIP">"192.168.1.9</string>
     <string name="cliConnect">Connect to Mergen Server</string>
     <string name="cliConnectIP">Please enter the server\'s IP address&#8230;</string>
 </resources>

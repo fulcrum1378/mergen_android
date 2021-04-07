@@ -14,32 +14,26 @@ import java.io.*
 import java.lang.Exception
 import java.net.Socket
 
-class Client(val that: Panel) : Thread() {
-    private var output: PrintWriter? = null
-    private var input: BufferedReader? = null
-    var host = "0.0.0.0"
-    var port = 80
+class Client(val that: Panel, val port: Int, val repeatable: Repeat) : Thread() {
+    private var host = "127.0.0.1"
+    var output: OutputStream? = null
 
     companion object {
         const val HOST = "host"
-        const val PORT = "port"
-        const val FRAME =  500L // will be multiplied by 2
+        const val FRAME = 500L
         val TOAST = Panel.Action.TOAST.ordinal
     }
 
     init {
         var hasHost = sp.contains(HOST)
-        var hasPort = sp.contains(PORT)
-        if (!hasHost || !hasPort) query()
-        else acknowledged(sp.getString(HOST, "0.0.0.0")!!, sp.getInt(PORT, 80))
+        if (!hasHost) query()
+        else acknowledged(sp.getString(HOST, "127.0.0.1")!!)
     }
 
-    fun acknowledged(h: String, p: Int) {
+    fun acknowledged(h: String) {
         host = h
-        port = p
         sp.edit().apply {
             putString(HOST, h)
-            putInt(PORT, p)
             apply()
         }
         start()
@@ -49,11 +43,9 @@ class Client(val that: Panel) : Thread() {
         var socket: Socket? = null
         while (true) try {
             socket = Socket(host, port)
-            output = PrintWriter(socket.getOutputStream())
-            input = BufferedReader(InputStreamReader(socket.getInputStream()))
-            for (x in 1..2) {
-                output!!.write("hey")
-                output!!.flush() // input!!.readLine()?
+            output = socket.getOutputStream() // socket.getInputStream()
+            while (true) {
+                repeatable.execute()
                 sleep(FRAME)
             }
         } catch (e: IOException) {
@@ -76,14 +68,16 @@ class Client(val that: Panel) : Thread() {
             that, R.string.cliConnect, R.string.cliConnectIP, et,
             DialogInterface.OnClickListener { _, _ ->
                 try {
-                    et.text.toString().split(":").apply {
-                        acknowledged(this[0], this[1].toInt())
-                    }
+                    acknowledged(et.text.toString())
                 } catch (ignored: Exception) {
                     handler?.obtainMessage(TOAST, "Invalid address, please try again!")
                         ?.sendToTarget()
                 }
             }
         )
+    }
+
+    interface Repeat {
+        fun execute()
     }
 }

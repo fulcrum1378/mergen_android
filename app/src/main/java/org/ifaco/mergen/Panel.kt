@@ -7,7 +7,6 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import org.ifaco.mergen.Fun.Companion.permResult
-import org.ifaco.mergen.com.Client
 import org.ifaco.mergen.com.Hearer
 import org.ifaco.mergen.com.Watcher
 import org.ifaco.mergen.databinding.PanelBinding
@@ -21,13 +20,12 @@ class Panel : AppCompatActivity() {
     val model: Model by viewModels()
     lateinit var wri: Writer
     lateinit var tak: Talker
-    lateinit var vis: Watcher
-    lateinit var ear: Hearer
-    lateinit var cli: Client
 
     companion object {
         var handler: Handler? = null
         var mp: MediaPlayer? = null
+        lateinit var vis: Watcher
+        lateinit var ear: Hearer
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -65,7 +63,6 @@ class Panel : AppCompatActivity() {
         // Communication
         vis = Watcher(this, b.preview)
         ear = Hearer(this)
-        cli = Client(this)
     }
 
     override fun onResume() {
@@ -81,10 +78,6 @@ class Panel : AppCompatActivity() {
     override fun onDestroy() {
         vis.destroy()
         ear.destroy()
-        try {
-            cli.interrupt()
-        } catch (ignored: java.lang.Exception) {
-        }
         try {
             mp?.release()
         } catch (ignored: Exception) {

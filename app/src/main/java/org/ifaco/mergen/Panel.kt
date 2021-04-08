@@ -7,13 +7,12 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import org.ifaco.mergen.Fun.Companion.permResult
-import org.ifaco.mergen.com.Hearer
-import org.ifaco.mergen.com.Watcher
+import org.ifaco.mergen.com.Recorder
 import org.ifaco.mergen.databinding.PanelBinding
 import org.ifaco.mergen.pro.Talker
 import org.ifaco.mergen.pro.Writer
 
-// adb connect 192.168.1.4:
+// adb connect 192.168.1.5:
 
 class Panel : AppCompatActivity() {
     lateinit var b: PanelBinding
@@ -24,8 +23,7 @@ class Panel : AppCompatActivity() {
     companion object {
         var handler: Handler? = null
         var mp: MediaPlayer? = null
-        var vis: Watcher? = null
-        var ear: Hearer? = null
+        var rec: Recorder? = null
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,8 +43,7 @@ class Panel : AppCompatActivity() {
                         mp?.setOnPreparedListener { mp?.start() }
                         mp?.setOnCompletionListener { mp?.release(); mp = null }
                     }
-                    //Action.HEAR.ordinal -> ear.start()
-                    Action.WATCH.ordinal -> vis?.start()
+                    Action.RECORD.ordinal -> rec?.start()
                     Action.TOAST.ordinal -> try {
                         Toast.makeText(Fun.c, msg.obj as String, Toast.LENGTH_SHORT).show()
                     } catch (ignored: Exception) {
@@ -61,23 +58,21 @@ class Panel : AppCompatActivity() {
         tak = Talker(this, b.say, model)
 
         // Communication
-        //vis = Watcher(this, b.preview)
-        //ear = Hearer(this)
+        rec = Recorder(this, b.preview)
     }
 
     override fun onResume() {
         super.onResume()
-        vis?.start()
+        rec?.start()
     }
 
     override fun onPause() {
         super.onPause()
-        vis?.stop()
+        rec?.stop()
     }
 
     override fun onDestroy() {
-        vis?.destroy()
-        ear?.destroy()
+        rec?.destroy()
         try {
             mp?.release()
         } catch (ignored: Exception) {
@@ -93,10 +88,9 @@ class Panel : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         val b = permResult(grantResults)
         when (requestCode) {
-            Hearer.req -> if (b) handler?.obtainMessage(Action.HEAR.ordinal)?.sendToTarget()
-            Watcher.req -> if (b) handler?.obtainMessage(Action.WATCH.ordinal)?.sendToTarget()
+            Recorder.req -> if (b) handler?.obtainMessage(Action.RECORD.ordinal)?.sendToTarget()
         }
     }
 
-    enum class Action { WRITE, TALK, HEAR, WATCH, TOAST }
+    enum class Action { WRITE, TALK, RECORD, TOAST }
 }

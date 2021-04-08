@@ -63,7 +63,7 @@ class Fun {
         }
 
         fun drown(v: View, bb: Boolean = false) {
-            if (bb) vis(v)
+            if (bb) vish(v)
             AnimatorSet().apply {
                 duration = 192
                 interpolator = LinearInterpolator()
@@ -74,7 +74,7 @@ class Fun {
                 )
                 addListener(object : AnimatorListenerAdapter() {
                     override fun onAnimationEnd(animation: Animator?) {
-                        if (!bb) vis(v, false)
+                        if (!bb) vish(v, false)
                     }
                 })
                 start()

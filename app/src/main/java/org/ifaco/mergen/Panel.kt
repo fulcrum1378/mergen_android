@@ -7,9 +7,8 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import org.ifaco.mergen.Fun.Companion.permResult
-import org.ifaco.mergen.com.Recorder
+import org.ifaco.mergen.rec.Recorder
 import org.ifaco.mergen.databinding.PanelBinding
-import org.ifaco.mergen.pro.Talker
 import org.ifaco.mergen.pro.Writer
 
 // adb connect 192.168.1.5:
@@ -17,8 +16,7 @@ import org.ifaco.mergen.pro.Writer
 class Panel : AppCompatActivity() {
     lateinit var b: PanelBinding
     val model: Model by viewModels()
-    lateinit var wri: Writer
-    lateinit var tak: Talker
+    lateinit var pro: Writer
 
     companion object {
         var handler: Handler? = null
@@ -53,11 +51,8 @@ class Panel : AppCompatActivity() {
             }
         }
 
-        // Pronouncer
-        wri = Writer(this, model, b.body, b.response, b.resSV, b.say, b.clear)
-        tak = Talker(this, b.say, model)
-
-        // Communication
+        // INITIALIZATION
+        pro = Writer(this, model, b.response, b.resSV, b.say, b.send, b.sendIcon, b.sending)
         rec = Recorder(this, b.preview)
     }
 

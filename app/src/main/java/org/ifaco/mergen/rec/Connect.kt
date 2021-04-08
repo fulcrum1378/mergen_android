@@ -1,4 +1,4 @@
-package org.ifaco.mergen.com
+package org.ifaco.mergen.rec
 
 import android.content.DialogInterface
 import android.widget.EditText

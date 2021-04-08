@@ -1,15 +1,19 @@
 package org.ifaco.mergen.pro
 
+import android.animation.ObjectAnimator
 import android.net.Uri
 import android.text.TextUtils
 import android.util.Base64
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.Toast
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.net.toUri
 import com.android.volley.DefaultRetryPolicy
 import com.android.volley.Request
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
+import org.ifaco.mergen.Fun
 import org.ifaco.mergen.Fun.Companion.c
 import org.ifaco.mergen.Model
 import org.ifaco.mergen.Panel
@@ -24,18 +28,21 @@ class Talker(
     val that: Panel,
     val et: EditText,
     val model: Model,
+    val bSend: ConstraintLayout,
+    val bSendIcon: ImageView,
+    val bSending: ImageView,
     var said: String = et.text.toString()
 ) {
     var result = true
 
     companion object {
-        var bSending = false
+        var isSending = false
+        var anSending: ObjectAnimator? = null
     }
 
     init {
         result = true
-        //if (here == null) result = false
-        if (said == "" || bSending) result = false
+        if (said == "" || isSending) result = false
         if (result) {
             sending(true)
             var got = "t=$said"
@@ -68,8 +75,10 @@ class Talker(
     }
 
     private fun sending(bb: Boolean) {
-        bSending = bb
+        isSending = bb
         et.isEnabled = !bb
+        anSending = Fun.whirl(bSending, if (bb) null else anSending)
+        Fun.drown(bSendIcon, !bb)
     }
 
     private fun encode(uriString: String): String {

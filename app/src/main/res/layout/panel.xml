@@ -8,7 +8,7 @@
     android:keepScreenOn="true"
     android:layoutDirection="ltr"
     tools:context=".Panel"
-    tools:ignore="MissingConstraints">
+    tools:ignore="MissingConstraints,ContentDescription">
 
     <androidx.camera.view.PreviewView
         android:id="@+id/preview"
@@ -28,26 +28,40 @@
         android:maxLength="1000"
         android:paddingStart="16dp"
         android:paddingTop="17dp"
-        android:paddingEnd="57dp"
+        android:paddingEnd="68dp"
         android:paddingBottom="17dp"
         android:textColor="@color/CS"
         android:textColorHint="@color/CSV"
         android:textSize="20sp"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <ImageView
-        android:id="@+id/clear"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_marginEnd="8dp"
-        android:adjustViewBounds="true"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/send"
+        android:layout_width="46dp"
+        android:layout_height="46dp"
+        android:layout_marginEnd="20dp"
         android:background="@drawable/hover_1"
-        android:padding="11dp"
-        android:src="@drawable/close_1"
-        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="@id/say"
         app:layout_constraintEnd_toEndOf="@id/say"
-        app:layout_constraintTop_toTopOf="@id/say" />
+        app:layout_constraintTop_toTopOf="@id/say">
+
+        <ImageView
+            android:id="@+id/sendIcon"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="6dp"
+            android:src="@drawable/send_1" />
+
+        <ImageView
+            android:id="@+id/sending"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleX="0"
+            android:scaleY="0"
+            android:padding="6dp"
+            android:src="@drawable/indicator_1"
+            android:visibility="invisible" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/resSV"

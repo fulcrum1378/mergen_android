@@ -9,16 +9,16 @@ import androidx.core.widget.addTextChangedListener
 import org.ifaco.mergen.Fun
 import org.ifaco.mergen.Model
 import org.ifaco.mergen.Panel
-import org.ifaco.mergen.otr.DoubleClickListener
 
 class Writer(
     val that: Panel,
     val model: Model,
-    bBody: ConstraintLayout,
     val bResponse: TextView,
     val bResSV: ConstraintLayout,
     val bSay: EditText,
-    val bClear: ImageView
+    val bSend: ConstraintLayout,
+    val bSendIcon: ImageView,
+    val bSending: ImageView
 ) {
     init {
         model.res.observe(that, { s ->
@@ -32,18 +32,10 @@ class Writer(
             respond(0)
         })
         bSay.typeface = Fun.fRegular
-        bSay.addTextChangedListener { Fun.vish(bClear, it.toString().isNotEmpty()) }
-        val action = object : DoubleClickListener() {
-            override fun onDoubleClick() {
-                if (!Talker.bSending) Talker(that, bSay, model)
-            }
-        }
-        bBody.setOnClickListener(action)
-        bResSV.setOnClickListener(action)
-        bClear.setOnClickListener {
-            bSay.setText("")
-            model.res.value = ""
-            Fun.fade(bResSV, false)
+        bSay.addTextChangedListener { Fun.vish(bSend, it.toString().isNotEmpty()) }
+        bSend.setOnClickListener {
+            if (bSay.text.toString() == "" || Talker.isSending) return@setOnClickListener
+            Talker(that, bSay, model, bSend, bSendIcon, bSending)
         }
         bResponse.typeface = Fun.fBold
     }

@@ -1,4 +1,4 @@
-package org.ifaco.mergen.com
+package org.ifaco.mergen.rec
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -76,12 +76,12 @@ class Recorder(val that: Panel, val previewView: PreviewView) {
                     )
                     .build()
                 cameraProvider.bindToLifecycle(that, cameraSelector, useCaseGroup)
-                /*cli = Client(that, PORT, object : Client.Repeat {
-                    override fun execute() {
-                        if (cli.output != null) capture()
-                    }
-                })*/
                 // "CameraSelector.DEFAULT_BACK_CAMERA" instead of "cameraSelector"
+                /*cli = Client(that, PORT, object : Client.Repeat {
+                   override fun execute() {
+                       if (cli.output != null) capture()
+                   }
+               })*/
             } catch (exc: Exception) {
                 Toast.makeText(Fun.c, exc.javaClass.name, Toast.LENGTH_SHORT).show()
                 canPreview = false

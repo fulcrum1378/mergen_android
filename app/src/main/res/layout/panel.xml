@@ -49,24 +49,27 @@
         app:layout_constraintEnd_toEndOf="@id/say"
         app:layout_constraintTop_toTopOf="@id/say" />
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <ScrollView
         android:id="@+id/resSV"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:background="@color/response"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintHeight_percent="0.18">
+        app:layout_constraintTop_toBottomOf="@id/say">
 
         <TextView
             android:id="@+id/response"
             style="@style/match"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="@color/response"
+            android:fontFamily="monospace"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="20dp"
             android:textAlignment="center"
             android:textColor="@color/CPO"
-            android:textSize="22sp" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            android:textSize="16sp" />
+    </ScrollView>
 
 
     <ImageView

@@ -16,24 +16,23 @@ import java.net.Socket
 
 class Client(val that: Panel, val port: Int, val repeatable: Repeat) : Thread() {
     private var host = "127.0.0.1"
-    var output: OutputStream? = null
+    var output: PrintWriter? = null
 
     companion object {
-        const val HOST = "host"
-        const val FRAME = 500L
-        val TOAST = Panel.Action.TOAST.ordinal
+        const val FRAME = 3000L
+        const val spHost = "host"
     }
 
     init {
-        var hasHost = sp.contains(HOST)
+        var hasHost = sp.contains(spHost)
         if (!hasHost) query()
-        else acknowledged(sp.getString(HOST, "127.0.0.1")!!)
+        else acknowledged(sp.getString(spHost, "127.0.0.1")!!)
     }
 
     fun acknowledged(h: String) {
         host = h
         sp.edit().apply {
-            putString(HOST, h)
+            putString(spHost, h)
             apply()
         }
         start()
@@ -43,15 +42,15 @@ class Client(val that: Panel, val port: Int, val repeatable: Repeat) : Thread() 
         var socket: Socket? = null
         while (true) try {
             socket = Socket(host, port)
-            output = socket.getOutputStream() // socket.getInputStream()
-            while (true) {
+            output = PrintWriter(socket.getOutputStream()) // socket.getInputStream()
+            for (x in 1..2) {
                 repeatable.execute()
                 sleep(FRAME)
             }
         } catch (e: IOException) {
             socket?.close()
             socket = null
-            handler?.obtainMessage(TOAST, "Could not connect!")?.sendToTarget()
+            handler?.obtainMessage(Panel.Action.TOAST.ordinal, "Could not connect!")?.sendToTarget()
             // alertDialogue1 RETRY OR CANCEL
             // query() IS NOT ALLOWED HERE
             sleep(5000)
@@ -70,7 +69,7 @@ class Client(val that: Panel, val port: Int, val repeatable: Repeat) : Thread() 
                 try {
                     acknowledged(et.text.toString())
                 } catch (ignored: Exception) {
-                    handler?.obtainMessage(TOAST, "Invalid address, please try again!")
+                    handler?.obtainMessage(Panel.Action.TOAST.ordinal, "Invalid address, please try again!")
                         ?.sendToTarget()
                 }
             }

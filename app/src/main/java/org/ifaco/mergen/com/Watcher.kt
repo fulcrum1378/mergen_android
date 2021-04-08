@@ -2,6 +2,7 @@ package org.ifaco.mergen.com
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.util.Base64
 import android.util.Rational
 import android.util.Size
 import android.widget.Toast
@@ -16,7 +17,7 @@ import org.ifaco.mergen.Fun.Companion.c
 import org.ifaco.mergen.Fun.Companion.dm
 import org.ifaco.mergen.Panel
 import java.io.File
-import java.io.OutputStream
+import java.io.FileInputStream
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -29,18 +30,18 @@ class Watcher(val that: Panel, val previewView: PreviewView) {
     lateinit var videoCapture: VideoCapture
     lateinit var imageCapture: ImageCapture
     lateinit var cameraSelector: CameraSelector
+    lateinit var cli: Client
     var cameraExecutor: ExecutorService = Executors.newSingleThreadExecutor()
     var canPreview = false
     var previewing = false
     var recording = false
 
     companion object {
-        lateinit var cli: Client
-
         const val req = 868
         const val perm = Manifest.permission.CAMERA
         const val PORT = 3772
         val size = Size(1200, 800)
+        val vision = File(c.cacheDir, "vision.jpg")
     }
 
     init {
@@ -88,7 +89,7 @@ class Watcher(val that: Panel, val previewView: PreviewView) {
                 cameraProvider.bindToLifecycle(that, cameraSelector, useCaseGroup)
                 cli = Client(that, PORT, object : Client.Repeat {
                     override fun execute() {
-                        if (cli.output != null) capture(cli.output!!)
+                        if (cli.output != null) capture()
                     }
                 })
                 // "CameraSelector.DEFAULT_BACK_CAMERA" instead of "cameraSelector"
@@ -128,14 +129,29 @@ class Watcher(val that: Panel, val previewView: PreviewView) {
         videoCapture.stopRecording()
     }
 
-    fun capture(os: OutputStream) {
-        val outputFileOptions = ImageCapture.OutputFileOptions.Builder(os).build()
+    fun capture() { // CLIENT THREAD
+        val outputFileOptions = ImageCapture.OutputFileOptions.Builder(vision).build()
         imageCapture.takePicture(outputFileOptions, cameraExecutor,
             object : ImageCapture.OnImageSavedCallback {
                 override fun onError(error: ImageCaptureException) {
+                    Panel.handler?.obtainMessage(
+                        Panel.Action.TOAST.ordinal, "ImageCaptureException: ${error.message}"
+                    )?.sendToTarget()
                 }
 
                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
+                    FileInputStream(vision).use {
+                        cli.output!!.write(Base64.encodeToString(it.readBytes(), Base64.DEFAULT))
+                        cli.output!!.flush()
+                        it.close()
+                    }
+                    try {
+                        vision.delete()
+                    } catch (e: Exception) {
+                        Panel.handler?.obtainMessage(
+                            Panel.Action.TOAST.ordinal, "Could not delete the cached image: ${e.message}"
+                        )?.sendToTarget()
+                    }
                 }
             })
     }

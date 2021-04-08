@@ -24,8 +24,8 @@ class Panel : AppCompatActivity() {
     companion object {
         var handler: Handler? = null
         var mp: MediaPlayer? = null
-        lateinit var vis: Watcher
-        lateinit var ear: Hearer
+        var vis: Watcher? = null
+        var ear: Hearer? = null
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,7 +46,7 @@ class Panel : AppCompatActivity() {
                         mp?.setOnCompletionListener { mp?.release(); mp = null }
                     }
                     //Action.HEAR.ordinal -> ear.start()
-                    Action.WATCH.ordinal -> vis.start()
+                    Action.WATCH.ordinal -> vis?.start()
                     Action.TOAST.ordinal -> try {
                         Toast.makeText(Fun.c, msg.obj as String, Toast.LENGTH_SHORT).show()
                     } catch (ignored: Exception) {
@@ -61,23 +61,23 @@ class Panel : AppCompatActivity() {
         tak = Talker(this, b.say, model)
 
         // Communication
-        vis = Watcher(this, b.preview)
-        ear = Hearer(this)
+        //vis = Watcher(this, b.preview)
+        //ear = Hearer(this)
     }
 
     override fun onResume() {
         super.onResume()
-        vis.start()
+        vis?.start()
     }
 
     override fun onPause() {
         super.onPause()
-        vis.stop()
+        vis?.stop()
     }
 
     override fun onDestroy() {
-        vis.destroy()
-        ear.destroy()
+        vis?.destroy()
+        ear?.destroy()
         try {
             mp?.release()
         } catch (ignored: Exception) {

@@ -9,6 +9,7 @@
     </style>
 
     <style name="alertDialogue1" parent="Theme.MaterialComponents.DayNight.Dialog.Alert">
+        <item name="android:background">@color/ADBG</item>
         <item name="android:textColor">@color/CS</item>
     </style>
 

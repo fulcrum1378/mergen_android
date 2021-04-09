@@ -10,18 +10,19 @@ import org.ifaco.mergen.Fun.Companion.permResult
 import org.ifaco.mergen.rec.Recorder
 import org.ifaco.mergen.databinding.PanelBinding
 import org.ifaco.mergen.pro.Writer
+import org.ifaco.mergen.rec.Connect
 
 // adb connect 192.168.1.5:
 
 class Panel : AppCompatActivity() {
-    lateinit var b: PanelBinding
-    val model: Model by viewModels()
-    lateinit var pro: Writer
+    private lateinit var b: PanelBinding
+    private val model: Model by viewModels()
+    private lateinit var pro: Writer
+    private var rec: Recorder? = null
 
     companion object {
         var handler: Handler? = null
         var mp: MediaPlayer? = null
-        var rec: Recorder? = null
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,7 +30,6 @@ class Panel : AppCompatActivity() {
         b = PanelBinding.inflate(layoutInflater)
         setContentView(b.root)
         Fun.init(this, b.root)
-
 
         // Handlers
         handler = object : Handler(Looper.getMainLooper()) {
@@ -53,7 +53,13 @@ class Panel : AppCompatActivity() {
 
         // INITIALIZATION
         pro = Writer(this, model, b.response, b.resSV, b.say, b.send, b.sendIcon, b.sending)
-        rec = Recorder(this, b.preview)
+        // rec = Recorder(this, b.preview)
+        object : CountDownTimer(3000, 3000) {
+            override fun onTick(millisUntilFinished: Long) {}
+            override fun onFinish() {
+                Connect(this@Panel) // DON'T START
+            }
+        }.start()
     }
 
     override fun onResume() {

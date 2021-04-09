@@ -17,17 +17,18 @@ import java.net.Socket
 class Connect(val that: Panel) : Thread() {
     private var host = "127.0.0.1"
     private var port = 80
-    var output: PrintWriter? = null
+    private var output: OutputStream? = null
 
     companion object {
-        const val FRAME = 3000L
+        const val FRAME = 20000L
         const val spHost = "host"
-        const val spPort = "host"
+        const val spPort = "port"
     }
 
     init {
         var hasHost = sp.contains(spHost)
-        if (!hasHost) query()
+        var hasPort = sp.contains(spPort)
+        if (!hasHost || !hasPort) query()
         else acknowledged(sp.getString(spHost, "127.0.0.1")!!, sp.getInt(spPort, 80))
     }
 
@@ -46,11 +47,13 @@ class Connect(val that: Panel) : Thread() {
         var socket: Socket? = null
         while (true) try {
             socket = Socket(host, port)
-            output = PrintWriter(socket.getOutputStream()) // socket.getInputStream()
-            /*for (x in 1..2) {
-                repeatable.execute()
-                sleep(FRAME)
-            }*/
+            output = socket.getOutputStream()
+            FileInputStream(File(c.filesDir, "IMG-20210403-WA0013.jpg")).use {
+                output!!.write(it.readBytes())
+                it.close()
+            }
+            output!!.flush()
+            sleep(FRAME)
         } catch (e: IOException) {
             socket?.close()
             socket = null
@@ -79,9 +82,5 @@ class Connect(val that: Panel) : Thread() {
                 }
             }
         )
-    }
-
-    interface Repeat {
-        fun execute()
     }
 }

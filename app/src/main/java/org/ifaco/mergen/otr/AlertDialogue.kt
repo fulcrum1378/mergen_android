@@ -87,6 +87,7 @@ class AlertDialogue {
                 that.resources.getDimension(R.dimen.alert1MsgLine) / Fun.dm.density, 0f
             )
             tvMsg?.textSize = that.resources.getDimension(R.dimen.alert1Msg) / Fun.dm.density
+            tvMsg?.setTextColor(color(R.color.ADTC))
             tvMsg?.setPadding(Fun.dp(28), Fun.dp(15), Fun.dp(28), Fun.dp(15))
             if (tvMsg != null && linkify) Linkify.addLinks(tvMsg, Linkify.ALL)
             return tvMsg

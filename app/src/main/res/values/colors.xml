@@ -8,4 +8,6 @@
     <color name="CSO">@color/CPO</color>
 
     <color name="response">#66222222</color>
+    <color name="ADBG">@color/CPO</color>
+    <color name="ADTC">@color/CP</color>
 </resources>

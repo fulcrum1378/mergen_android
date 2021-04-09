@@ -115,6 +115,24 @@
         android:layout_width="70dp"
         android:layout_height="70dp"
         android:alpha="0.8"
+        android:visibility="gone"
         android:background="@drawable/round_button_1"
         app:layout_constraintVertical_bias="0.73" />
+
+    <ImageView
+        android:id="@+id/recording"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:alpha="0.36"
+        android:padding="6dp"
+        android:scaleX="0"
+        android:scaleY="0"
+        android:src="@drawable/indicator_1"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@id/record"
+        app:layout_constraintHeight_percent="0.6"
+        app:layout_constraintLeft_toLeftOf="@id/record"
+        app:layout_constraintRight_toRightOf="@id/record"
+        app:layout_constraintTop_toTopOf="@id/record"
+        app:layout_constraintWidth_percent="0.6" />
 </androidx.constraintlayout.widget.ConstraintLayout>

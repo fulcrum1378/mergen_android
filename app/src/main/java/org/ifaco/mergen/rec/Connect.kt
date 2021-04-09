@@ -47,9 +47,9 @@ class Connect(val that: Panel) : Thread() {
     var sendable: ByteArray? = null
     override fun run() {
         while (true) try {
-            socket = Socket(host, port)
-            output = socket!!.getOutputStream()
             sendable?.let {
+                socket = Socket(host, port)
+                output = socket!!.getOutputStream()
                 output!!.write(z(it.size.toString()).encodeToByteArray() + it)
                 output!!.flush()
             }

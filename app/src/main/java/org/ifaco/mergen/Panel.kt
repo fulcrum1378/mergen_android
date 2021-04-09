@@ -53,10 +53,8 @@ class Panel : AppCompatActivity() {
 
         // INITIALIZATION
         pro = Writer(this, model, b.response, b.resSV, b.say, b.send, b.sendIcon, b.sending)
-        rec = Recorder(this, b.preview)
-        b.record.setOnClickListener {
-            if (!rec.recording) rec.recStart() else rec.recStop()
-        }
+        rec = Recorder(this, b.preview, b.recording)
+        //b.record.setOnClickListener { if (!rec.recording) rec.recStart() else rec.recStop() }
     }
 
     override fun onResume() {

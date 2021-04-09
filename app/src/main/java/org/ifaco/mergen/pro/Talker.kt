@@ -31,13 +31,12 @@ class Talker(
     val bSending: ImageView,
     var said: String = et.text.toString()
 ) {
-    var result = true
-
     companion object {
         var isSending = false
         var anSending: ObjectAnimator? = null
     }
 
+    var result = true
     init {
         result = true
         if (said == "" || isSending) result = false

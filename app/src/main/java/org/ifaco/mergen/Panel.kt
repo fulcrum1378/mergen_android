@@ -54,7 +54,7 @@ class Panel : AppCompatActivity() {
         // INITIALIZATION
         pro = Writer(this, model, b.response, b.resSV, b.say, b.send, b.sendIcon, b.sending)
         // rec = Recorder(this, b.preview)
-        object : CountDownTimer(3000, 3000) {
+        object : CountDownTimer(1000, 1000) {
             override fun onTick(millisUntilFinished: Long) {}
             override fun onFinish() {
                 Connect(this@Panel) // DON'T START

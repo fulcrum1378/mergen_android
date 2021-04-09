@@ -18,14 +18,19 @@ class Connect(val that: Panel) : Thread() {
     private var host = "127.0.0.1"
     private var port = 80
     private var output: OutputStream? = null
+    private var sendable: ByteArray? = null
 
     companion object {
-        const val FRAME = 20000L
+        const val FRAME = 2000L
         const val spHost = "host"
         const val spPort = "port"
     }
 
     init {
+        c.openFileInput("west.mp4").use {
+            sendable = it.readBytes()
+            it.close()
+        }
         var hasHost = sp.contains(spHost)
         var hasPort = sp.contains(spPort)
         if (!hasHost || !hasPort) query()
@@ -48,11 +53,10 @@ class Connect(val that: Panel) : Thread() {
         while (true) try {
             socket = Socket(host, port)
             output = socket.getOutputStream()
-            FileInputStream(File(c.filesDir, "IMG-20210403-WA0013.jpg")).use {
-                output!!.write(it.readBytes())
-                it.close()
+            sendable?.let {
+                output!!.write(z(it.size.toString()).encodeToByteArray() + it)
+                output!!.flush()
             }
-            output!!.flush()
             sleep(FRAME)
         } catch (e: IOException) {
             socket?.close()
@@ -62,6 +66,12 @@ class Connect(val that: Panel) : Thread() {
             // query() IS NOT ALLOWED HERE
             sleep(5000)
         }
+    }
+
+    fun z(s: String): String {
+        var add = ""
+        for (x in 0..(9 - s.length)) add += "0"
+        return add + s
     }
 
     fun query() {

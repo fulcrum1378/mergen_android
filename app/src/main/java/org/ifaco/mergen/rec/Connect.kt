@@ -10,6 +10,7 @@ import org.ifaco.mergen.Panel
 import org.ifaco.mergen.Panel.Companion.handler
 import org.ifaco.mergen.R
 import org.ifaco.mergen.otr.AlertDialogue.Companion.alertDialogue2
+import org.ifaco.mergen.rec.Recorder.Companion.FRAME
 import java.io.*
 import java.lang.Exception
 import java.net.Socket
@@ -17,20 +18,13 @@ import java.net.Socket
 class Connect(val that: Panel) : Thread() {
     private var host = "127.0.0.1"
     private var port = 80
-    private var output: OutputStream? = null
-    private var sendable: ByteArray? = null
 
     companion object {
-        const val FRAME = 2000L
         const val spHost = "host"
         const val spPort = "port"
     }
 
     init {
-        c.openFileInput("west.mp4").use {
-            sendable = it.readBytes()
-            it.close()
-        }
         var hasHost = sp.contains(spHost)
         var hasPort = sp.contains(spPort)
         if (!hasHost || !hasPort) query()
@@ -48,23 +42,28 @@ class Connect(val that: Panel) : Thread() {
         start()
     }
 
+    private var socket: Socket? = null
+    private var output: OutputStream? = null
+    var sendable: ByteArray? = null
     override fun run() {
-        var socket: Socket? = null
         while (true) try {
             socket = Socket(host, port)
-            output = socket.getOutputStream()
+            output = socket!!.getOutputStream()
             sendable?.let {
                 output!!.write(z(it.size.toString()).encodeToByteArray() + it)
                 output!!.flush()
             }
             sleep(FRAME)
-        } catch (e: IOException) {
-            socket?.close()
-            socket = null
-            handler?.obtainMessage(Panel.Action.TOAST.ordinal, "Could not connect!")?.sendToTarget()
-            // alertDialogue1 RETRY OR CANCEL
-            // query() IS NOT ALLOWED HERE
-            sleep(5000)
+        } catch (e: Exception) {
+            try {
+                socket?.close()
+                socket = null
+                handler?.obtainMessage(Panel.Action.TOAST.ordinal, "Could not connect!")?.sendToTarget()
+                // alertDialogue1 RETRY OR CANCEL
+                // query() IS NOT ALLOWED HERE
+                sleep(5000)
+            } catch (ignored: Exception) {
+            }
         }
     }
 
@@ -92,5 +91,14 @@ class Connect(val that: Panel) : Thread() {
                 }
             }
         )
+    }
+
+    fun end() {
+        socket?.close()
+        socket = null
+        try {
+            interrupt()
+        } catch (ignored: Exception) {
+        }
     }
 }

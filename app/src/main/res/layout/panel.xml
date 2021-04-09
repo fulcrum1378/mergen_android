@@ -56,9 +56,9 @@
             android:id="@+id/sending"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:padding="6dp"
             android:scaleX="0"
             android:scaleY="0"
-            android:padding="6dp"
             android:src="@drawable/indicator_1"
             android:visibility="invisible" />
     </androidx.constraintlayout.widget.ConstraintLayout>
@@ -107,4 +107,14 @@
         android:rotation="180"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintRight_toRightOf="parent" />
+
+
+    <ImageView
+        android:id="@+id/record"
+        style="@style/match"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:alpha="0.8"
+        android:background="@drawable/round_button_1"
+        app:layout_constraintVertical_bias="0.73" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -35,7 +35,7 @@ class Writer(
         bSay.addTextChangedListener { Fun.vish(bSend, it.toString().isNotEmpty()) }
         bSend.setOnClickListener {
             if (bSay.text.toString() == "" || Talker.isSending) return@setOnClickListener
-            Talker(that, bSay, model, bSend, bSendIcon, bSending)
+            Talker(that, bSay, model, bSendIcon, bSending)
         }
         bResponse.typeface = Fun.fBold
     }

@@ -18,7 +18,7 @@ class Panel : AppCompatActivity() {
     private lateinit var b: PanelBinding
     private val model: Model by viewModels()
     private lateinit var pro: Writer
-    private var rec: Recorder? = null
+    private lateinit var rec: Recorder
 
     companion object {
         var handler: Handler? = null
@@ -41,7 +41,7 @@ class Panel : AppCompatActivity() {
                         mp?.setOnPreparedListener { mp?.start() }
                         mp?.setOnCompletionListener { mp?.release(); mp = null }
                     }
-                    Action.RECORD.ordinal -> rec?.start()
+                    Action.RECORD.ordinal -> rec.start()
                     Action.TOAST.ordinal -> try {
                         Toast.makeText(Fun.c, msg.obj as String, Toast.LENGTH_SHORT).show()
                     } catch (ignored: Exception) {
@@ -53,27 +53,24 @@ class Panel : AppCompatActivity() {
 
         // INITIALIZATION
         pro = Writer(this, model, b.response, b.resSV, b.say, b.send, b.sendIcon, b.sending)
-        // rec = Recorder(this, b.preview)
-        object : CountDownTimer(1000, 1000) {
-            override fun onTick(millisUntilFinished: Long) {}
-            override fun onFinish() {
-                Connect(this@Panel) // DON'T START
-            }
-        }.start()
+        rec = Recorder(this, b.preview)
+        b.record.setOnClickListener {
+            if (!rec.recording) rec.recStart() else rec.recStop()
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        rec?.start()
+        rec.start()
     }
 
     override fun onPause() {
         super.onPause()
-        rec?.stop()
+        rec.stop()
     }
 
     override fun onDestroy() {
-        rec?.destroy()
+        rec.destroy()
         try {
             mp?.release()
         } catch (ignored: Exception) {

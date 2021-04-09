@@ -2,6 +2,7 @@ package org.ifaco.mergen.rec
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.os.CountDownTimer
 import android.util.Rational
 import android.util.Size
 import android.widget.Toast
@@ -12,30 +13,24 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.common.util.concurrent.ListenableFuture
 import org.ifaco.mergen.Fun
+import org.ifaco.mergen.Fun.Companion.c
 import org.ifaco.mergen.Panel
 import java.io.File
+import java.io.FileInputStream
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 @SuppressLint("UnsafeExperimentalUsageError", "RestrictedApi")
 class Recorder(val that: Panel, val previewView: PreviewView) {
-    lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
-    lateinit var cameraProvider: ProcessCameraProvider
-    lateinit var useCaseGroup: UseCaseGroup
-    lateinit var preview: Preview
-    lateinit var videoCapture: VideoCapture
-    lateinit var cameraSelector: CameraSelector
-    var cameraExecutor: ExecutorService = Executors.newSingleThreadExecutor()
-    var canPreview = false
-    var previewing = false
-    var recording = false
-
     companion object {
         const val camPerm = Manifest.permission.CAMERA
         const val audPerm = Manifest.permission.RECORD_AUDIO
         const val req = 786
+        const val FRAME = 5000L
         val size = Size(1200, 800)
     }
+
+    var canPreview = false
 
     init {
         if (!Fun.permGranted(camPerm) || !Fun.permGranted(audPerm))
@@ -46,11 +41,18 @@ class Recorder(val that: Panel, val previewView: PreviewView) {
         }
     }
 
+    lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
+    lateinit var cameraProvider: ProcessCameraProvider
+    lateinit var useCaseGroup: UseCaseGroup
+    lateinit var preview: Preview
+    lateinit var videoCapture: VideoCapture
+    lateinit var cameraSelector: CameraSelector
+    var previewing = false
     fun start() {
         if (!canPreview) return
         if (previewing) return
         previewing = true
-        cameraProviderFuture = ProcessCameraProvider.getInstance(Fun.c)
+        cameraProviderFuture = ProcessCameraProvider.getInstance(c)
         cameraProviderFuture.addListener({
             try {
                 cameraProvider = cameraProviderFuture.get()
@@ -77,16 +79,11 @@ class Recorder(val that: Panel, val previewView: PreviewView) {
                     .build()
                 cameraProvider.bindToLifecycle(that, cameraSelector, useCaseGroup)
                 // "CameraSelector.DEFAULT_BACK_CAMERA" instead of "cameraSelector"
-                /*cli = Client(that, PORT, object : Client.Repeat {
-                   override fun execute() {
-                       if (cli.output != null) capture()
-                   }
-               })*/
             } catch (exc: Exception) {
-                Toast.makeText(Fun.c, exc.javaClass.name, Toast.LENGTH_SHORT).show()
+                Toast.makeText(c, exc.javaClass.name, Toast.LENGTH_SHORT).show()
                 canPreview = false
             }
-        }, ContextCompat.getMainExecutor(Fun.c))
+        }, ContextCompat.getMainExecutor(c))
     }
 
     fun stop() {
@@ -96,32 +93,67 @@ class Recorder(val that: Panel, val previewView: PreviewView) {
         previewView.removeAllViews()
     }
 
-    fun resumeRecording() {
+    var recording = false
+    var time = 0
+    private var streamer: CountDownTimer? = null
+    private var con: Connect? = null
+    fun recStart() {
         if (!previewing || recording) return
-        val vid = File(Fun.c.cacheDir, "vision.mp4")
-        if (vid.exists()) vid.delete()
+        con = Connect(that)
+        removeCache()
+        time = 0
+        recording = true
+        recResume()
+        streamer = object : CountDownTimer(FRAME, FRAME) {
+            override fun onTick(millisUntilFinished: Long) {}
+            override fun onFinish() {
+                recPause()
+                time += 1
+                recResume()
+            }
+        }.start()
+    }
+
+    fun recStop() {
+        if (!previewing || !recording) return
+        recording = false
+        streamer?.cancel()
+        streamer = null
+        con?.end()
+    }
+
+    var cameraExecutor: ExecutorService = Executors.newSingleThreadExecutor()
+    fun recResume() {
+        if (!previewing || !recording) return
+        val vid = File(c.cacheDir, "$time.mp4")
         videoCapture.startRecording(
             VideoCapture.OutputFileOptions.Builder(vid).build(),
             cameraExecutor, object : VideoCapture.OnVideoSavedCallback {
                 override fun onVideoSaved(outputFileResults: VideoCapture.OutputFileResults) {
+                    FileInputStream(vid).use {
+                        con?.sendable = it.readBytes()
+                        it.close()
+                    }
                 }
 
                 override fun onError(videoCaptureError: Int, message: String, cause: Throwable?) {
+                    Panel.handler?.obtainMessage(Panel.Action.TOAST.ordinal, "ERROR: $message")
+                        ?.sendToTarget()
                 }
             })
     }
 
-    fun pauseRecording() {
+    fun recPause() {
         if (!previewing || !recording) return
         videoCapture.stopRecording()
+    }
+
+    fun removeCache() {
+        c.cacheDir.listFiles()?.forEach { it.delete() }
     }
 
     fun destroy() {
         if (!canPreview) return
         cameraExecutor.shutdown()
-        /*try {
-            cli.interrupt()
-        } catch (ignored: Exception) {
-        }*/
     }
 }

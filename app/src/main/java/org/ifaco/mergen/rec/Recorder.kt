@@ -47,6 +47,7 @@ class Recorder(
         }
     }
 
+    lateinit var ear: Hearing
     lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
     lateinit var cameraProvider: ProcessCameraProvider
     lateinit var useCaseGroup: UseCaseGroup
@@ -91,6 +92,7 @@ class Recorder(
                     .build()
                 cameraProvider.bindToLifecycle(that, cameraSelector, useCaseGroup)
                 // "CameraSelector.DEFAULT_BACK_CAMERA" instead of "cameraSelector"
+                ear = Hearing(that)
                 strStart()
                 val timeout = 60L * 1000L
                 object : CountDownTimer(timeout, timeout) {
@@ -99,8 +101,8 @@ class Recorder(
                         strStop()
                     }
                 }.start()
-            } catch (exc: Exception) {
-                Toast.makeText(c, exc.javaClass.name, Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(c, "CAMERA INIT ERROR: ${e.message}", Toast.LENGTH_SHORT).show()
                 canPreview = false
             }
         }, ContextCompat.getMainExecutor(c))
@@ -118,6 +120,8 @@ class Recorder(
     private var streamer: CountDownTimer? = null
     private var con: Connect? = null
     private var anRecording: ObjectAnimator? = null
+
+    @Suppress("unused")
     fun recStart() {
         if (!previewing || recording) return
         con = Connect(that)
@@ -136,6 +140,7 @@ class Recorder(
         anRecording = Fun.whirl(bRecording, null)
     }
 
+    @Suppress("unused")
     fun recStop() {
         if (!previewing || !recording) return
         recording = false
@@ -151,8 +156,7 @@ class Recorder(
         val vid = File(c.cacheDir, "$time.mp4")
         videoCapture.startRecording(
             VideoCapture.OutputFileOptions.Builder(vid).build(),
-            cameraExecutor, object : VideoCapture.OnVideoSavedCallback {
-                // NOT UI THREAD
+            cameraExecutor, object : VideoCapture.OnVideoSavedCallback {// NOT UI THREAD
                 override fun onVideoSaved(outputFileResults: VideoCapture.OutputFileResults) {
                     FileInputStream(vid).use {
                         con?.sendable = it.readBytes()
@@ -177,6 +181,7 @@ class Recorder(
         time = 0
         removeCache()
         con = Connect(that)
+        ear.start()
         streaming = true
         capture()
     }
@@ -209,6 +214,10 @@ class Recorder(
     fun strStop() {
         streaming = false
         con?.end()
+        try {
+            ear.interrupt()
+        } catch (ignored: Exception) {
+        }
     }
 
     fun removeCache() {

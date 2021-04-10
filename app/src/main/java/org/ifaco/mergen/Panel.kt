@@ -7,10 +7,9 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import org.ifaco.mergen.Fun.Companion.permResult
-import org.ifaco.mergen.rec.Recorder
 import org.ifaco.mergen.databinding.PanelBinding
 import org.ifaco.mergen.pro.Writer
-import org.ifaco.mergen.rec.Connect
+import org.ifaco.mergen.rec.Recorder
 
 // adb connect 192.168.1.5:
 

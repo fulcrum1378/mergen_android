@@ -15,7 +15,7 @@ import java.io.*
 import java.lang.Exception
 import java.net.Socket
 
-class Connect(val that: Panel) : Thread() {
+class Connect(val that: Panel, val audioSocket: Boolean = false) : Thread() {
     private var host = "127.0.0.1"
     private var port = 80
 
@@ -48,7 +48,7 @@ class Connect(val that: Panel) : Thread() {
     override fun run() {
         while (true) try {
             sendable?.let {
-                socket = Socket(host, port)
+                socket = Socket(host, port + (if (audioSocket) 1 else 0))
                 output = socket!!.getOutputStream()
                 output!!.write(z(it.size.toString()).encodeToByteArray() + it)
                 output!!.flush()
@@ -58,7 +58,8 @@ class Connect(val that: Panel) : Thread() {
             try {
                 socket?.close()
                 socket = null
-                handler?.obtainMessage(Panel.Action.TOAST.ordinal, "Could not connect!")?.sendToTarget()
+                handler?.obtainMessage(Panel.Action.TOAST.ordinal, "Could not connect!")
+                    ?.sendToTarget()
                 // alertDialogue1 RETRY OR CANCEL
                 // query() IS NOT ALLOWED HERE
                 sleep(5000)
@@ -86,8 +87,10 @@ class Connect(val that: Panel) : Thread() {
                     val spl = et.text.toString().split(":")
                     acknowledged(spl[0], spl[1].toInt())
                 } catch (ignored: Exception) {
-                    handler?.obtainMessage(Panel.Action.TOAST.ordinal, "Invalid address, please try again!")
-                        ?.sendToTarget()
+                    handler?.obtainMessage(
+                        Panel.Action.TOAST.ordinal,
+                        "Invalid address, please try again!"
+                    )?.sendToTarget()
                 }
             }
         )

@@ -130,6 +130,12 @@ class Fun {
 
         fun permResult(grantResults: IntArray) =
             grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
+
+        fun z(s: String): String {
+            var add = ""
+            for (x in 0..(9 - s.length)) add += "0"
+            return add + s
+        }
     }
 
     enum class Fonts(val path: String) {

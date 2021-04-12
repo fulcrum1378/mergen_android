@@ -68,6 +68,7 @@ class Panel : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        rec.pause()
         rec.destroy()
         try {
             mp?.release()
@@ -75,6 +76,7 @@ class Panel : AppCompatActivity() {
         }
         mp = null
         handler = null
+        System.gc()
         super.onDestroy()
     }
 

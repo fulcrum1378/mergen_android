@@ -3,6 +3,7 @@ package org.ifaco.mergen.rec
 import android.Manifest
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
+import android.os.CountDownTimer
 import android.util.Rational
 import android.util.Size
 import android.widget.ImageView
@@ -119,7 +120,7 @@ class Recorder(
         if (!recording) return
         val vis = File(c.cacheDir, "$time.jpg")
         imageCapture.takePicture(ImageCapture.OutputFileOptions.Builder(vis).build(),
-            cameraExecutor, object : ImageCapture.OnImageSavedCallback {
+            cameraExecutor, object : ImageCapture.OnImageSavedCallback {// NOT UI THREAD
                 override fun onError(error: ImageCaptureException) {
                     Panel.handler?.obtainMessage(
                         Panel.Action.TOAST.ordinal, "ImageCaptureException: ${error.message}"
@@ -128,21 +129,26 @@ class Recorder(
 
                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                     FileInputStream(vis).use {
-                        con?.sendable = it.readBytes()
+                        con?.send(it.readBytes())
                         it.close()
                     }
-                    /*try {
+                    try {
                         vis.delete()
                     } catch (e: Exception) {
-                    }*/
-                    capture()
+                    }
                 }
             })
+        time += 1
+        object : CountDownTimer(FRAME, FRAME) {
+            override fun onTick(millisUntilFinished: Long) {}
+            override fun onFinish() {
+                capture()
+            }
+        }.start()
     }
 
     fun pause() {
         recording = false
-        con?.end()
         con = null
         ear?.interrupt()
         ear = null

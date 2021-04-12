@@ -2,6 +2,7 @@ package org.ifaco.mergen.rec
 
 import android.content.DialogInterface
 import android.widget.EditText
+import org.ifaco.mergen.Fun
 import org.ifaco.mergen.Fun.Companion.c
 import org.ifaco.mergen.Fun.Companion.dm
 import org.ifaco.mergen.Fun.Companion.dp
@@ -10,15 +11,12 @@ import org.ifaco.mergen.Panel
 import org.ifaco.mergen.Panel.Companion.handler
 import org.ifaco.mergen.R
 import org.ifaco.mergen.otr.AlertDialogue.Companion.alertDialogue2
-import org.ifaco.mergen.rec.Recorder.Companion.FRAME
-import java.io.*
 import java.lang.Exception
 import java.net.Socket
 
-class Connect(val that: Panel, val audioSocket: Boolean = false) : Thread() {
+class Connect(val that: Panel, val audioSocket: Boolean = false) {
     private var host = "127.0.0.1"
     private var port = 80
-    private var active = true
 
     companion object {
         const val spHost = "host"
@@ -32,7 +30,18 @@ class Connect(val that: Panel, val audioSocket: Boolean = false) : Thread() {
         else acknowledged(sp.getString(spHost, "127.0.0.1")!!, sp.getInt(spPort, 80))
     }
 
-    fun acknowledged(h: String, p: Int) {
+    fun send(data: ByteArray?) {
+        if (data == null) return
+        var socket = Socket(host, port + (if (audioSocket) 1 else 0))
+        var output = socket.getOutputStream()
+        output.write(Fun.z(data.size.toString()).encodeToByteArray() + data)
+        output.flush()
+        output.close()
+        socket.close()
+        System.gc()
+    }
+
+    private fun acknowledged(h: String, p: Int) {
         host = h
         port = p
         sp.edit().apply {
@@ -40,42 +49,9 @@ class Connect(val that: Panel, val audioSocket: Boolean = false) : Thread() {
             putInt(spPort, p)
             apply()
         }
-        start()
     }
 
-    private var socket: Socket? = null
-    private var output: OutputStream? = null
-    var sendable: ByteArray? = null
-    override fun run() {
-        while (active) try {
-            sendable?.let {
-                socket = Socket(host, port + (if (audioSocket) 1 else 0))
-                output = socket!!.getOutputStream()
-                output!!.write(z(it.size.toString()).encodeToByteArray() + it)
-                output!!.flush()
-            }
-            sleep(FRAME)
-        } catch (e: Exception) {
-            try {
-                socket?.close()
-                socket = null
-                handler?.obtainMessage(Panel.Action.TOAST.ordinal, "Could not connect!")
-                    ?.sendToTarget()
-                // alertDialogue1 RETRY OR CANCEL
-                // query() IS NOT ALLOWED HERE
-                sleep(5000)
-            } catch (ignored: Exception) {
-            }
-        }
-    }
-
-    fun z(s: String): String {
-        var add = ""
-        for (x in 0..(9 - s.length)) add += "0"
-        return add + s
-    }
-
-    fun query() {
+    private fun query() {
         val et = EditText(c).apply {
             setPadding(dp(18), dp(12), dp(18), dp(12))
             textSize = that.resources.getDimension(R.dimen.alert1Title) / dm.density
@@ -94,13 +70,5 @@ class Connect(val that: Panel, val audioSocket: Boolean = false) : Thread() {
                 }
             }
         )
-    }
-
-    fun end() {
-        active = false
-        socket?.close()
-        socket = null
-        sendable = null
-        interrupt()
     }
 }

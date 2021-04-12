@@ -36,7 +36,7 @@ class Recorder(
     private var cameraExecutor: ExecutorService = Executors.newSingleThreadExecutor()
     var canPreview = false
     var previewing = false
-    var recording = true
+    var recording = false
     var ear: Hearing? = null
     var time = 0
     var con: Connect? = null
@@ -108,9 +108,9 @@ class Recorder(
     fun resume() {
         time = 0
         c.cacheDir.listFiles()?.forEach { it.delete() }
-        ear = Hearing(that).also { it.start() }
-        con = Connect(that)
         recording = true
+        ear = Hearing(that).apply { start() }
+        con = Connect(that)
         anRecording = Fun.whirl(bRecording, null)
         capture()
     }
@@ -143,10 +143,8 @@ class Recorder(
     fun pause() {
         recording = false
         con?.end()
-        try {
-            ear?.interrupt()
-        } catch (ignored: Exception) {
-        }
+        con = null
+        ear?.interrupt()
         ear = null
         anRecording = Fun.whirl(bRecording, anRecording)
     }

@@ -18,6 +18,7 @@ import java.net.Socket
 class Connect(val that: Panel, val audioSocket: Boolean = false) : Thread() {
     private var host = "127.0.0.1"
     private var port = 80
+    private var active = true
 
     companion object {
         const val spHost = "host"
@@ -46,7 +47,7 @@ class Connect(val that: Panel, val audioSocket: Boolean = false) : Thread() {
     private var output: OutputStream? = null
     var sendable: ByteArray? = null
     override fun run() {
-        while (true) try {
+        while (active) try {
             sendable?.let {
                 socket = Socket(host, port + (if (audioSocket) 1 else 0))
                 output = socket!!.getOutputStream()
@@ -88,8 +89,7 @@ class Connect(val that: Panel, val audioSocket: Boolean = false) : Thread() {
                     acknowledged(spl[0], spl[1].toInt())
                 } catch (ignored: Exception) {
                     handler?.obtainMessage(
-                        Panel.Action.TOAST.ordinal,
-                        "Invalid address, please try again!"
+                        Panel.Action.TOAST.ordinal, "Invalid address, please try again!"
                     )?.sendToTarget()
                 }
             }
@@ -97,11 +97,10 @@ class Connect(val that: Panel, val audioSocket: Boolean = false) : Thread() {
     }
 
     fun end() {
+        active = false
         socket?.close()
         socket = null
-        try {
-            interrupt()
-        } catch (ignored: Exception) {
-        }
+        sendable = null
+        interrupt()
     }
 }

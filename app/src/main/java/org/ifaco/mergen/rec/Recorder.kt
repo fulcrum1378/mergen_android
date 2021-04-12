@@ -3,7 +3,6 @@ package org.ifaco.mergen.rec
 import android.Manifest
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
-import android.os.CountDownTimer
 import android.util.Rational
 import android.util.Size
 import android.widget.ImageView
@@ -28,6 +27,21 @@ class Recorder(
     val bPreview: PreviewView,
     val bRecording: ImageView
 ) {
+    lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
+    lateinit var cameraProvider: ProcessCameraProvider
+    lateinit var useCaseGroup: UseCaseGroup
+    lateinit var preview: Preview
+    lateinit var imageCapture: ImageCapture
+    private lateinit var cameraSelector: CameraSelector
+    private var cameraExecutor: ExecutorService = Executors.newSingleThreadExecutor()
+    var canPreview = false
+    var previewing = false
+    var recording = true
+    var ear: Hearing? = null
+    var time = 0
+    var con: Connect? = null
+    var anRecording: ObjectAnimator? = null
+
     companion object {
         const val camPerm = Manifest.permission.CAMERA
         const val audPerm = Manifest.permission.RECORD_AUDIO
@@ -35,8 +49,6 @@ class Recorder(
         const val FRAME = 50L
         val size = Size(800, 400)
     }
-
-    var canPreview = false
 
     init {
         if (!Fun.permGranted(camPerm) || !Fun.permGranted(audPerm))
@@ -47,15 +59,6 @@ class Recorder(
         }
     }
 
-    lateinit var ear: Hearing
-    lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
-    lateinit var cameraProvider: ProcessCameraProvider
-    lateinit var useCaseGroup: UseCaseGroup
-    lateinit var preview: Preview
-    lateinit var imageCapture: ImageCapture
-    lateinit var videoCapture: VideoCapture
-    lateinit var cameraSelector: CameraSelector
-    var previewing = false
     fun start() {
         if (!canPreview) return
         if (previewing) return
@@ -75,14 +78,10 @@ class Recorder(
                     .setTargetRotation(that.resources.configuration.orientation)
                     .setMaxResolution(size)
                     .build()
-                videoCapture = VideoCapture.Builder()
-                    .setTargetRotation(that.resources.configuration.orientation)
-                    .setMaxResolution(size)
-                    .build()
+
                 useCaseGroup = UseCaseGroup.Builder()
                     .addUseCase(preview)
                     .addUseCase(imageCapture)
-                    .addUseCase(videoCapture)
                     .setViewPort(
                         ViewPort.Builder(
                             Rational(Fun.dm.heightPixels, Fun.dm.widthPixels), // HEIGHT * WIDTH
@@ -92,15 +91,6 @@ class Recorder(
                     .build()
                 cameraProvider.bindToLifecycle(that, cameraSelector, useCaseGroup)
                 // "CameraSelector.DEFAULT_BACK_CAMERA" instead of "cameraSelector"
-                ear = Hearing(that)
-                strStart()
-                val timeout = 60L * 1000L
-                object : CountDownTimer(timeout, timeout) {
-                    override fun onTick(millisUntilFinished: Long) {}
-                    override fun onFinish() {
-                        strStop()
-                    }
-                }.start()
             } catch (e: Exception) {
                 Toast.makeText(c, "CAMERA INIT ERROR: ${e.message}", Toast.LENGTH_SHORT).show()
                 canPreview = false
@@ -115,79 +105,18 @@ class Recorder(
         bPreview.removeAllViews()
     }
 
-    var recording = false
-    private var time = 0
-    private var streamer: CountDownTimer? = null
-    private var con: Connect? = null
-    private var anRecording: ObjectAnimator? = null
-
-    @Suppress("unused")
-    fun recStart() {
-        if (!previewing || recording) return
-        con = Connect(that)
-        removeCache()
+    fun resume() {
         time = 0
+        c.cacheDir.listFiles()?.forEach { it.delete() }
+        ear = Hearing(that).also { it.start() }
+        con = Connect(that)
         recording = true
-        recResume()
-        streamer = object : CountDownTimer(FRAME, FRAME) {
-            override fun onTick(millisUntilFinished: Long) {}
-            override fun onFinish() {
-                recPause()
-                time += 1
-                recResume()
-            }
-        }.start()
         anRecording = Fun.whirl(bRecording, null)
-    }
-
-    @Suppress("unused")
-    fun recStop() {
-        if (!previewing || !recording) return
-        recording = false
-        streamer?.cancel()
-        streamer = null
-        con?.end()
-        anRecording = Fun.whirl(bRecording, anRecording)
-    }
-
-    var cameraExecutor: ExecutorService = Executors.newSingleThreadExecutor()
-    fun recResume() {
-        if (!previewing || !recording) return
-        val vid = File(c.cacheDir, "$time.mp4")
-        videoCapture.startRecording(
-            VideoCapture.OutputFileOptions.Builder(vid).build(),
-            cameraExecutor, object : VideoCapture.OnVideoSavedCallback {// NOT UI THREAD
-                override fun onVideoSaved(outputFileResults: VideoCapture.OutputFileResults) {
-                    FileInputStream(vid).use {
-                        con?.sendable = it.readBytes()
-                        it.close()
-                    }
-                }
-
-                override fun onError(videoCaptureError: Int, message: String, cause: Throwable?) {
-                    Panel.handler?.obtainMessage(Panel.Action.TOAST.ordinal, "ERROR: $message")
-                        ?.sendToTarget()
-                }
-            })
-    }
-
-    fun recPause() {
-        if (!previewing || !recording) return
-        videoCapture.stopRecording()
-    }
-
-    var streaming = true
-    fun strStart() {
-        time = 0
-        removeCache()
-        con = Connect(that)
-        ear.start()
-        streaming = true
         capture()
     }
 
     fun capture() {
-        if (!streaming) return
+        if (!recording) return
         val vis = File(c.cacheDir, "$time.jpg")
         imageCapture.takePicture(ImageCapture.OutputFileOptions.Builder(vis).build(),
             cameraExecutor, object : ImageCapture.OnImageSavedCallback {
@@ -211,17 +140,15 @@ class Recorder(
             })
     }
 
-    fun strStop() {
-        streaming = false
+    fun pause() {
+        recording = false
         con?.end()
         try {
-            ear.interrupt()
+            ear?.interrupt()
         } catch (ignored: Exception) {
         }
-    }
-
-    fun removeCache() {
-        c.cacheDir.listFiles()?.forEach { it.delete() }
+        ear = null
+        anRecording = Fun.whirl(bRecording, anRecording)
     }
 
     fun destroy() {

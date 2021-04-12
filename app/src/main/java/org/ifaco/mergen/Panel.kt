@@ -53,7 +53,8 @@ class Panel : AppCompatActivity() {
         // INITIALIZATION
         pro = Writer(this, model, b.response, b.resSV, b.say, b.send, b.sendIcon, b.sending)
         rec = Recorder(this, b.preview, b.recording)
-        //b.record.setOnClickListener { if (!rec.recording) rec.recStart() else rec.recStop() }
+        b.record.setOnClickListener { if (!rec.recording) rec.resume() else rec.pause() }
+        b.recording.colorFilter = Fun.cf(R.color.CPO)
     }
 
     override fun onResume() {

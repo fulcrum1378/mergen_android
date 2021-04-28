@@ -4,7 +4,6 @@ import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
 import org.ifaco.mergen.Panel
-import org.ifaco.mergen.rec.Recorder.Companion.FRAME
 
 class Hearing(that: Panel) : Thread() {
     private var recorder: AudioRecord? = null
@@ -30,11 +29,6 @@ class Hearing(that: Panel) : Thread() {
             minBufSize = recorder!!.read(buffer!!, 0, buffer!!.size)
             con?.send(buffer)
         }
-        /*val wav = Wave(sampleRate, channelConfig.toShort(), ShortArray(minBufSize), 0, minBufSize)
-        while (status) {
-            con?.send(wav.out)
-            sleep(1000L)
-        }*/
     }
 
     override fun interrupt() {

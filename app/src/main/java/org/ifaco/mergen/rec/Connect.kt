@@ -1,6 +1,7 @@
 package org.ifaco.mergen.rec
 
 import android.content.DialogInterface
+import android.system.ErrnoException
 import android.widget.EditText
 import org.ifaco.mergen.Fun
 import org.ifaco.mergen.Fun.Companion.c
@@ -32,13 +33,17 @@ class Connect(val that: Panel, val audioSocket: Boolean = false) {
 
     fun send(data: ByteArray?) {
         if (data == null) return
-        var socket = Socket(host, port + (if (audioSocket) 1 else 0))
-        var output = socket.getOutputStream()
-        output.write(Fun.z(data.size.toString()).encodeToByteArray() + data)
-        output.flush()
-        output.close()
-        socket.close()
-        System.gc()
+        try {
+            var socket = Socket(host, port + (if (audioSocket) 1 else 0))
+            var output = socket.getOutputStream()
+            output.write(Fun.z(data.size.toString()).encodeToByteArray() + data)
+            output.flush()
+            output.close()
+            socket.close()
+            System.gc()
+        } catch (ignored: ErrnoException) {
+            // CONNECTION REFUSED
+        }
     }
 
     private fun acknowledged(h: String, p: Int) {

@@ -6,8 +6,11 @@
     <string name="proError">Traceback</string>
     <string name="proHint">.....</string>
 
-    <!-- Client -->
-    <string name="cliDefIP">"192.168.1.9:3772</string>
-    <string name="cliConnect">Connect to Mergen Server</string>
-    <string name="cliConnectIP">Please enter the server\'s IP address&#8230;</string>
+    <!-- rec -->
+    <string name="recDefIP">"192.168.1.9:3772</string>
+    <string name="recConnect">Connect to Mergen Server</string>
+    <string name="recConnectIP">Please enter the server\'s IP address&#8230;</string>
+    <string name="recConnectErr">Connection Failed</string>
+    <string name="recSocketImgErr">Could not connect to the remote picture socket!</string>
+    <string name="recSocketAudErr">Could not connect to the remote audio socket!</string>
 </resources>

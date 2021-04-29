@@ -9,7 +9,7 @@ android {
     buildToolsVersion "30.0.3"
 
     defaultConfig {
-        applicationId "org.ifaco.mergen"
+        applicationId "com.mergen.android"
         minSdkVersion 21
         targetSdkVersion 30
         versionCode 1
@@ -23,10 +23,10 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
-        debug {
+        /*debug {
             applicationIdSuffix ".debug"
             debuggable true
-        }
+        }*/
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8

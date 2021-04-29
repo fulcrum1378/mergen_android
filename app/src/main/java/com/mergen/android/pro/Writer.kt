@@ -1,4 +1,4 @@
-package org.ifaco.mergen.pro
+package com.mergen.android.pro
 
 import android.os.CountDownTimer
 import android.widget.EditText
@@ -6,9 +6,9 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.widget.addTextChangedListener
-import org.ifaco.mergen.Fun
-import org.ifaco.mergen.Model
-import org.ifaco.mergen.Panel
+import com.mergen.android.Fun
+import com.mergen.android.Model
+import com.mergen.android.Panel
 
 class Writer(
     val that: Panel,

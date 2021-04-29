@@ -1,9 +1,12 @@
-package org.ifaco.mergen.rec
+package com.mergen.android.rec
 
 import android.Manifest
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.os.CountDownTimer
+import android.os.Handler
+import android.os.Looper
+import android.os.Message
 import android.util.Rational
 import android.util.Size
 import android.widget.ImageView
@@ -14,9 +17,10 @@ import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.common.util.concurrent.ListenableFuture
-import org.ifaco.mergen.Fun
-import org.ifaco.mergen.Fun.Companion.c
-import org.ifaco.mergen.Panel
+import com.mergen.android.Fun
+import com.mergen.android.Fun.Companion.c
+import com.mergen.android.Panel
+import com.mergen.android.R
 import java.io.File
 import java.io.FileInputStream
 import java.util.concurrent.ExecutorService
@@ -44,6 +48,8 @@ class Recorder(
     var anRecording: ObjectAnimator? = null
 
     companion object {
+        lateinit var handler: Handler
+
         const val camPerm = Manifest.permission.CAMERA
         const val audPerm = Manifest.permission.RECORD_AUDIO
         const val req = 786
@@ -57,6 +63,13 @@ class Recorder(
         else {
             canPreview = true
             this.start()
+        }
+        handler = object : Handler(Looper.getMainLooper()) {
+            override fun handleMessage(msg: Message) {
+                when (msg.what) {
+                    Action.PAUSE.ordinal -> pause()
+                }
+            }
         }
     }
 
@@ -107,11 +120,12 @@ class Recorder(
     }
 
     fun resume() {
+        con = Connect(that)
+        if (!Connect.isAcknowledged) return
         time = 0
         c.cacheDir.listFiles()?.forEach { it.delete() }
         recording = true
         ear = Hearing(that).apply { start() }
-        con = Connect(that)
         anRecording = Fun.whirl(bRecording, null)
         capture()
     }
@@ -120,7 +134,8 @@ class Recorder(
         if (!recording) return
         val vis = File(c.cacheDir, "$time.jpg")
         imageCapture.takePicture(ImageCapture.OutputFileOptions.Builder(vis).build(),
-            cameraExecutor, object : ImageCapture.OnImageSavedCallback {// NOT UI THREAD
+            cameraExecutor, object : ImageCapture.OnImageSavedCallback {
+                // NOT UI THREAD
                 override fun onError(error: ImageCaptureException) {
                     Panel.handler?.obtainMessage(
                         Panel.Action.TOAST.ordinal, "ImageCaptureException: ${error.message}"
@@ -129,7 +144,15 @@ class Recorder(
 
                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                     FileInputStream(vis).use {
-                        con?.send(it.readBytes())
+                        val sent = con?.send(it.readBytes())
+                        if (sent == null || !sent) {
+                            recording = false // Repeated for assurance
+                            Panel.handler?.obtainMessage(
+                                Panel.Action.ERROR.ordinal,
+                                R.string.recConnectErr, R.string.recSocketImgErr
+                            )?.sendToTarget()
+                            handler.obtainMessage(Action.PAUSE.ordinal).sendToTarget()
+                        }
                         it.close()
                     }
                     try {
@@ -159,4 +182,7 @@ class Recorder(
         if (!canPreview) return
         cameraExecutor.shutdown()
     }
+
+
+    enum class Action { PAUSE }
 }

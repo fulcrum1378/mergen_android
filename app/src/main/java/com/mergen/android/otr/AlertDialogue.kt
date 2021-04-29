@@ -1,4 +1,4 @@
-package org.ifaco.mergen.otr
+package com.mergen.android.otr
 
 import android.content.DialogInterface
 import android.graphics.Typeface
@@ -11,21 +11,22 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import org.ifaco.mergen.Fun
-import org.ifaco.mergen.Fun.Companion.color
-import org.ifaco.mergen.R
+import com.mergen.android.Fun
+import com.mergen.android.Fun.Companion.color
+import com.mergen.android.R
 
 class AlertDialogue {
     companion object {
         fun alertDialogue1(
-            that: AppCompatActivity, title: Int, message: String,
+            that: AppCompatActivity, title: Int, message: Any,
             onOK: DialogInterface.OnClickListener? = null,
             onCancel: DialogInterface.OnCancelListener? = null,
             font: Typeface = Fun.fRegular
         ) {
             AlertDialog.Builder(that, R.style.alertDialogue1).apply {
                 setTitle(title)
-                setMessage(message)
+                if (message is String) setMessage(message)
+                else if (message is Int) setMessage(message)
                 setIcon(R.mipmap.launcher_round)
                 setPositiveButton(R.string.ok, onOK)
                 setOnCancelListener(onCancel)

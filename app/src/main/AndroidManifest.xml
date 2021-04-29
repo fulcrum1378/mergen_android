@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="org.ifaco.mergen">
+    package="com.mergen.android">
 
     <uses-feature
         android:name="android.hardware.camera.any"
@@ -26,7 +26,7 @@
         tools:targetApi="n">
         <!--Android doesn't allow IP ranging method. @xml/network_security_config-->
 
-        <activity android:name=".Panel">
+        <activity android:name="com.mergen.android.Panel">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

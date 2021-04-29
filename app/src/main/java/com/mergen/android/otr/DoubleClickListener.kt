@@ -1,4 +1,4 @@
-package org.ifaco.mergen.otr
+package com.mergen.android.otr
 
 import android.os.SystemClock
 import android.view.View

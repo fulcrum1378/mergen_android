@@ -1,4 +1,4 @@
-package org.ifaco.mergen
+package com.mergen.android
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel

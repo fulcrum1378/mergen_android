@@ -1,4 +1,4 @@
-package org.ifaco.mergen.pro
+package com.mergen.android.pro
 
 import android.animation.ObjectAnimator
 import android.net.Uri
@@ -12,13 +12,13 @@ import com.android.volley.DefaultRetryPolicy
 import com.android.volley.Request
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
-import org.ifaco.mergen.Fun
-import org.ifaco.mergen.Fun.Companion.c
-import org.ifaco.mergen.Model
-import org.ifaco.mergen.Panel
-import org.ifaco.mergen.Panel.Companion.handler
-import org.ifaco.mergen.R
-import org.ifaco.mergen.otr.AlertDialogue
+import com.mergen.android.Fun
+import com.mergen.android.Fun.Companion.c
+import com.mergen.android.Model
+import com.mergen.android.Panel
+import com.mergen.android.Panel.Companion.handler
+import com.mergen.android.R
+import com.mergen.android.otr.AlertDialogue
 import java.io.File
 import java.io.FileOutputStream
 import java.util.regex.Pattern

@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:keepScreenOn="true"
     android:layoutDirection="ltr"
-    tools:context=".Panel"
+    tools:context="com.mergen.android.Panel"
     tools:ignore="MissingConstraints,ContentDescription">
 
     <androidx.camera.view.PreviewView

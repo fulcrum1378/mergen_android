@@ -1,9 +1,10 @@
-package org.ifaco.mergen.rec
+package com.mergen.android.rec
 
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
-import org.ifaco.mergen.Panel
+import com.mergen.android.Panel
+import com.mergen.android.R
 
 class Hearing(that: Panel) : Thread() {
     private var recorder: AudioRecord? = null
@@ -27,7 +28,14 @@ class Hearing(that: Panel) : Thread() {
         recorder!!.startRecording()
         while (status) {
             minBufSize = recorder!!.read(buffer!!, 0, buffer!!.size)
-            con?.send(buffer)
+            val sent = con?.send(buffer)
+            if (sent == null || !sent) {
+                Panel.handler?.obtainMessage(
+                    Panel.Action.ERROR.ordinal, R.string.recConnectErr, R.string.recSocketImgErr
+                )?.sendToTarget()
+                Recorder.handler.obtainMessage(Recorder.Action.PAUSE.ordinal).sendToTarget()
+                interrupt()
+            }
         }
     }
 

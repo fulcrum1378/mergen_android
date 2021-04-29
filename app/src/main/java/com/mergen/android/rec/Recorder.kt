@@ -4,9 +4,6 @@ import android.Manifest
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.os.CountDownTimer
-import android.os.Handler
-import android.os.Looper
-import android.os.Message
 import android.util.Rational
 import android.util.Size
 import android.widget.ImageView
@@ -19,7 +16,9 @@ import androidx.core.content.ContextCompat
 import com.google.common.util.concurrent.ListenableFuture
 import com.mergen.android.Fun
 import com.mergen.android.Fun.Companion.c
+import com.mergen.android.Panel.Companion.handler
 import com.mergen.android.Panel
+import com.mergen.android.Panel.Action
 import com.mergen.android.R
 import java.io.File
 import java.io.FileInputStream
@@ -48,8 +47,6 @@ class Recorder(
     var anRecording: ObjectAnimator? = null
 
     companion object {
-        lateinit var handler: Handler
-
         const val camPerm = Manifest.permission.CAMERA
         const val audPerm = Manifest.permission.RECORD_AUDIO
         const val req = 786
@@ -63,13 +60,6 @@ class Recorder(
         else {
             canPreview = true
             this.start()
-        }
-        handler = object : Handler(Looper.getMainLooper()) {
-            override fun handleMessage(msg: Message) {
-                when (msg.what) {
-                    Action.PAUSE.ordinal -> pause()
-                }
-            }
         }
     }
 
@@ -127,9 +117,11 @@ class Recorder(
         recording = true
         ear = Hearing(that).apply { start() }
         anRecording = Fun.whirl(bRecording, null)
+        socketError = true
         capture()
     }
 
+    var socketError = true
     fun capture() {
         if (!recording) return
         val vis = File(c.cacheDir, "$time.jpg")
@@ -137,8 +129,8 @@ class Recorder(
             cameraExecutor, object : ImageCapture.OnImageSavedCallback {
                 // NOT UI THREAD
                 override fun onError(error: ImageCaptureException) {
-                    Panel.handler?.obtainMessage(
-                        Panel.Action.TOAST.ordinal, "ImageCaptureException: ${error.message}"
+                    handler?.obtainMessage(
+                        Action.TOAST.ordinal, "ImageCaptureException: ${error.message}"
                     )?.sendToTarget()
                 }
 
@@ -147,11 +139,13 @@ class Recorder(
                         val sent = con?.send(it.readBytes())
                         if (sent == null || !sent) {
                             recording = false // Repeated for assurance
-                            Panel.handler?.obtainMessage(
-                                Panel.Action.ERROR.ordinal,
-                                R.string.recConnectErr, R.string.recSocketImgErr
-                            )?.sendToTarget()
-                            handler.obtainMessage(Action.PAUSE.ordinal).sendToTarget()
+                            if (socketError) {
+                                handler?.obtainMessage(Action.ERROR.ordinal,
+                                    R.string.recConnectErr, R.string.recSocketImgErr
+                                )?.sendToTarget()
+                                socketError = false
+                            }
+                            handler?.obtainMessage(Action.PAUSE.ordinal)?.sendToTarget()
                         }
                         it.close()
                     }
@@ -182,7 +176,4 @@ class Recorder(
         if (!canPreview) return
         cameraExecutor.shutdown()
     }
-
-
-    enum class Action { PAUSE }
 }

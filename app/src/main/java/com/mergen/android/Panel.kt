@@ -71,6 +71,7 @@ class Panel : AppCompatActivity() {
                     }
                     Action.ERROR.ordinal ->
                         AlertDialogue.alertDialogue1(this@Panel, msg.arg1, msg.arg2)
+                    Action.PAUSE.ordinal -> rec.pause()
                 }
             }
         }
@@ -115,5 +116,5 @@ class Panel : AppCompatActivity() {
         }
     }
 
-    enum class Action { WRITE, TALK, RECORD, TOAST, QUERY, ERROR }
+    enum class Action { WRITE, TALK, RECORD, TOAST, QUERY, ERROR, PAUSE }
 }

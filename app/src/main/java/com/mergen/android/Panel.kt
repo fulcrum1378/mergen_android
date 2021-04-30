@@ -14,13 +14,16 @@ import com.mergen.android.pro.Writer
 import com.mergen.android.rec.Connect
 import com.mergen.android.rec.Recorder
 
-// adb connect 192.168.1.4:
+// adb connect 192.168.1.5:
 
 class Panel : AppCompatActivity() {
     private lateinit var b: PanelBinding
     private val model: Model by viewModels()
     private lateinit var pro: Writer
     private lateinit var rec: Recorder
+    private val socketErrors = ArrayList<Connect.Error>()
+    private var socketErrorTimer: CountDownTimer? = null
+    private val socketErrorTO = 1000L
 
     companion object {
         var handler: Handler? = null
@@ -69,9 +72,20 @@ class Panel : AppCompatActivity() {
                             }
                         )
                     }
-                    Action.ERROR.ordinal ->
-                        AlertDialogue.alertDialogue1(this@Panel, msg.arg1, msg.arg2)
-                    Action.PAUSE.ordinal -> rec.pause()
+                    Action.SOCKET_ERROR.ordinal -> {
+                        rec.pause()
+                        rec.ear?.interrupt()
+                        socketErrors.add(msg.obj as Connect.Error)
+                        socketErrorTimer?.cancel()
+                        socketErrorTimer = object : CountDownTimer(socketErrorTO, socketErrorTO) {
+                            override fun onTick(millisUntilFinished: Long) {}
+                            override fun onFinish() {
+                                judgeSocketStatus()
+                                socketErrors.clear()
+                                socketErrorTimer = null
+                            }
+                        }.start()
+                    }
                 }
             }
         }
@@ -79,7 +93,10 @@ class Panel : AppCompatActivity() {
         // INITIALIZATION
         pro = Writer(this, model, b.response, b.resSV, b.say, b.send, b.sendIcon, b.sending)
         rec = Recorder(this, b.preview, b.recording)
-        b.record.setOnClickListener { if (!rec.recording) rec.resume() else rec.pause() }
+        b.record.setOnClickListener {
+            if (socketErrorTimer != null) return@setOnClickListener
+            if (!rec.recording) rec.resume() else rec.pause()
+        }
         b.recording.colorFilter = Fun.cf(R.color.CPO)
     }
 
@@ -116,5 +133,48 @@ class Panel : AppCompatActivity() {
         }
     }
 
-    enum class Action { WRITE, TALK, RECORD, TOAST, QUERY, ERROR, PAUSE }
+
+    fun judgeSocketStatus() {
+        var mustQuery = false
+        var conProblem = false
+        var imgProblem = false
+        var audProblem = false
+        var unknown: String? = null
+        var sentNull = false
+        for (e in socketErrors) {
+            if (!e.isAudio) imgProblem = true
+            else audProblem = true
+            when (e.e) {
+                "java.net.NoRouteToHostException", "java.net.UnknownHostException" ->
+                    mustQuery = true
+                "java.net.ConnectException" -> conProblem = true
+                "false" -> sentNull = true
+                else -> unknown = e.e
+            }
+        }
+        when {
+            mustQuery -> handler?.obtainMessage(Action.QUERY.ordinal)?.sendToTarget()
+            unknown != null -> AlertDialogue.alertDialogue1(
+                this@Panel, R.string.recConnectErr,
+                getString(R.string.recSocketUnknownErr, unknown)
+            )
+            sentNull -> AlertDialogue.alertDialogue1(
+                this@Panel, R.string.recConnectErr,
+                getString(R.string.recSocketSentNull, if (imgProblem) "picture" else "audio")
+            )
+            conProblem -> {
+                if (imgProblem) AlertDialogue.alertDialogue1(
+                    this@Panel, R.string.recConnectErr,
+                    getString(R.string.recSocketImgErr, Connect.host + ":" + Connect.port)
+                )
+                if (audProblem) AlertDialogue.alertDialogue1(
+                    this@Panel, R.string.recConnectErr,
+                    getString(R.string.recSocketAudErr, Connect.host + ":" + (Connect.port + 1))
+                )
+            }
+        }
+    }
+
+
+    enum class Action { WRITE, TALK, RECORD, TOAST, QUERY, SOCKET_ERROR }
 }

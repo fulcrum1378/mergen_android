@@ -4,9 +4,6 @@ import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
 import com.mergen.android.Panel
-import com.mergen.android.Panel.Action
-import com.mergen.android.Panel.Companion.handler
-import com.mergen.android.R
 
 class Hearing(that: Panel) : Thread() {
     private var recorder: AudioRecord? = null
@@ -30,14 +27,7 @@ class Hearing(that: Panel) : Thread() {
         recorder!!.startRecording()
         while (status) {
             minBufSize = recorder!!.read(buffer!!, 0, buffer!!.size)
-            val sent = con?.send(buffer)
-            if (sent == null || !sent) {
-                handler?.obtainMessage(
-                    Action.ERROR.ordinal, R.string.recConnectErr, R.string.recSocketAudErr
-                )?.sendToTarget()
-                handler?.obtainMessage(Action.PAUSE.ordinal)?.sendToTarget()
-                interrupt()
-            }
+            con?.send(buffer)
         }
     }
 

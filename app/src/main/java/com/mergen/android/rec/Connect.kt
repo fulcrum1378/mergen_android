@@ -4,15 +4,15 @@ import com.mergen.android.Fun
 import com.mergen.android.Fun.Companion.sp
 import com.mergen.android.Panel
 import com.mergen.android.Panel.Companion.handler
-import java.net.ConnectException
+import java.lang.Exception
 import java.net.Socket
 
 class Connect(@Suppress("UNUSED_PARAMETER") that: Panel, val audioSocket: Boolean = false) {
     companion object {
         const val spHost = "host"
         const val spPort = "port"
-        private var host = "127.0.0.1"
-        private var port = 80
+        var host = "127.0.0.1"
+        var port = 80
         var isAcknowledged = false
 
         fun acknowledged(h: String, p: Int) {
@@ -34,9 +34,9 @@ class Connect(@Suppress("UNUSED_PARAMETER") that: Panel, val audioSocket: Boolea
         else acknowledged(sp.getString(spHost, "127.0.0.1")!!, sp.getInt(spPort, 80))
     }
 
-    fun send(data: ByteArray?): Boolean {
-        if (data == null) return false
-        return try {
+    fun send(data: ByteArray?) {
+        if (data == null) error("false")
+        else try {
             var socket = Socket(host, port + (if (audioSocket) 1 else 0))
             var output = socket.getOutputStream()
             output.write(Fun.z(data.size.toString()).encodeToByteArray() + data)
@@ -44,9 +44,15 @@ class Connect(@Suppress("UNUSED_PARAMETER") that: Panel, val audioSocket: Boolea
             output.close()
             socket.close()
             System.gc()
-            true
-        } catch (ignored: ConnectException) {
-            false// CONNECTION REFUSED
+        } catch (e: Exception) {
+            error(e.javaClass.name)
         }
     }
+
+    fun error(sent: String) {
+        handler?.obtainMessage(Panel.Action.SOCKET_ERROR.ordinal, Error(sent, audioSocket))
+            ?.sendToTarget()
+    }
+
+    data class Error(val e: String, val isAudio: Boolean)
 }

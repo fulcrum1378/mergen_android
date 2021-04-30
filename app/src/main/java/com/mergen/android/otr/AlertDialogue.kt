@@ -41,6 +41,7 @@ class AlertDialogue {
         fun alertDialogue2(
             that: AppCompatActivity, title: Int, message: Int, view: View,
             onOK: DialogInterface.OnClickListener? = null,
+            onCancel: DialogInterface.OnCancelListener? = null,
             font: Typeface = Fun.fRegular
         ) {
             AlertDialog.Builder(that, R.style.alertDialogue1).apply {
@@ -48,6 +49,7 @@ class AlertDialogue {
                 setMessage(message)
                 setIcon(R.mipmap.launcher_round)
                 setPositiveButton(R.string.ok, onOK)
+                setOnCancelListener(onCancel)
                 setView(view)
             }.create().apply {
                 show()

@@ -11,6 +11,8 @@
     <string name="recConnect">Connect to Mergen Server</string>
     <string name="recConnectIP">Please enter the server\'s IP address&#8230;</string>
     <string name="recConnectErr">Connection Failed</string>
-    <string name="recSocketImgErr">Could not connect to the remote picture socket!</string>
-    <string name="recSocketAudErr">Could not connect to the remote audio socket!</string>
+    <string name="recSocketImgErr">Could not connect to the remote picture socket at %1$s!</string>
+    <string name="recSocketAudErr">Could not connect to the remote audio socket at %1$s!</string>
+    <string name="recSocketUnknownErr">Unknown error in socket connection: %1$s!</string>
+    <string name="recSocketSentNull">Cannot send NULL in %1$s socket!</string>
 </resources>

@@ -19,13 +19,12 @@ import com.mergen.android.Fun.Companion.c
 import com.mergen.android.Panel.Companion.handler
 import com.mergen.android.Panel
 import com.mergen.android.Panel.Action
-import com.mergen.android.R
 import java.io.File
 import java.io.FileInputStream
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
-@SuppressLint("UnsafeExperimentalUsageError", "RestrictedApi")
+@SuppressLint("UnsafeExperimentalUsageError", "RestrictedApi", "UnsafeOptInUsageError")
 class Recorder(
     val that: Panel,
     val bPreview: PreviewView,
@@ -117,11 +116,9 @@ class Recorder(
         recording = true
         ear = Hearing(that).apply { start() }
         anRecording = Fun.whirl(bRecording, null)
-        socketError = true
         capture()
     }
 
-    var socketError = true
     fun capture() {
         if (!recording) return
         val vis = File(c.cacheDir, "$time.jpg")
@@ -136,17 +133,7 @@ class Recorder(
 
                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                     FileInputStream(vis).use {
-                        val sent = con?.send(it.readBytes())
-                        if (sent == null || !sent) {
-                            recording = false // Repeated for assurance
-                            if (socketError) {
-                                handler?.obtainMessage(Action.ERROR.ordinal,
-                                    R.string.recConnectErr, R.string.recSocketImgErr
-                                )?.sendToTarget()
-                                socketError = false
-                            }
-                            handler?.obtainMessage(Action.PAUSE.ordinal)?.sendToTarget()
-                        }
+                        con?.send(it.readBytes())
                         it.close()
                     }
                     try {
@@ -165,11 +152,11 @@ class Recorder(
     }
 
     fun pause() {
+        if (recording) anRecording = Fun.whirl(bRecording, anRecording)
         recording = false
         con = null
         ear?.interrupt()
         ear = null
-        anRecording = Fun.whirl(bRecording, anRecording)
     }
 
     fun destroy() {

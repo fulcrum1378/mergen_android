@@ -51,7 +51,9 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 
     implementation 'com.android.volley:volley:1.2.0'
-    implementation 'androidx.activity:activity-ktx:1.2.2'
+    implementation 'androidx.activity:activity-ktx:1.2.3'
+    //implementation 'org.garret.perst:1.0.0'
+    //implementation 'org.garret.perst.impl:1.0.0'
 
     def camerax_version = "1.1.0-alpha04"
     implementation "androidx.camera:camera-core:${camerax_version}"

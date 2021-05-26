@@ -2,7 +2,6 @@ package com.mergen.android.com
 
 import android.Manifest
 import android.os.CountDownTimer
-import android.widget.ImageView
 import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import com.mergen.android.Fun
@@ -11,9 +10,9 @@ import com.mergen.android.Panel
 import com.mergen.android.R
 import com.mergen.android.otr.AlertDialogue
 
-class Controller(val that: Panel, bPreview: PreviewView, bRecording: ImageView) : ToRecord {
-    private val rec = Recorder(that, bPreview, bRecording)
+class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
     private var con = Connect()
+    val rec = Recorder(that, bPreview)
 
     companion object {
         const val camPerm = Manifest.permission.CAMERA
@@ -111,8 +110,10 @@ class Controller(val that: Panel, bPreview: PreviewView, bRecording: ImageView) 
     }
 
 
+    var toggling = false
     fun toggle() {
-        if (socketErrorTimer != null) return
+        if (socketErrorTimer != null || toggling) return
+        toggling = true
         if (!rec.recording) begin() else end()
     }
 
@@ -121,13 +122,17 @@ class Controller(val that: Panel, bPreview: PreviewView, bRecording: ImageView) 
     }
 
     override fun begin() {
-        Thread { con.send(Notify.START.s) }.start()
-        rec.begin()
+        Thread {
+            if (con.send(Notify.START.s, foreword = false, receive = true) == "true")
+                Panel.handler?.obtainMessage(Panel.Action.FORCE_REC.ordinal)?.sendToTarget()
+        }.start()
+        toggling = false
     }
 
     override fun end() {
-        Thread { con.send(Notify.STOP.s) }.start()
         rec.end()
+        Thread { con.send(Notify.STOP.s, foreword = false, receive = true) }.start()
+        toggling = false
     }
 
     override fun off() {

@@ -1,11 +1,9 @@
 package com.mergen.android.com
 
-import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.os.CountDownTimer
 import android.util.Rational
 import android.util.Size
-import android.widget.ImageView
 import android.widget.Toast
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -23,11 +21,7 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 @SuppressLint("UnsafeExperimentalUsageError", "RestrictedApi", "UnsafeOptInUsageError")
-class Recorder(
-    val that: Panel,
-    val bPreview: PreviewView,
-    val bRecording: ImageView
-) : ToRecord {
+class Recorder(val that: Panel, val bPreview: PreviewView) : ToRecord {
     lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
     lateinit var cameraProvider: ProcessCameraProvider
     lateinit var useCaseGroup: UseCaseGroup
@@ -41,7 +35,6 @@ class Recorder(
     var ear: Hearing? = null
     var time = 0
     var con: Connect? = null
-    var anRecording: ObjectAnimator? = null
 
     companion object {
         const val FRAME = 50L
@@ -101,7 +94,7 @@ class Recorder(
         c.cacheDir.listFiles()?.forEach { it.delete() }
         recording = true
         ear = Hearing().apply { start() }
-        anRecording = Fun.whirl(bRecording, null)
+        handler?.obtainMessage(Action.TOGGLE.ordinal, true)?.sendToTarget()
         capture()
     }
 
@@ -112,12 +105,14 @@ class Recorder(
             cameraExecutor, object : ImageCapture.OnImageSavedCallback {
                 // NOT UI THREAD
                 override fun onError(error: ImageCaptureException) {
+                    if (!recording) return
                     handler?.obtainMessage(
                         Action.TOAST.ordinal, "ImageCaptureException: ${error.message}"
                     )?.sendToTarget()
                 }
 
                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
+                    if (!recording) return
                     FileInputStream(vis).use {
                         con?.send(it.readBytes())
                         it.close()
@@ -138,7 +133,7 @@ class Recorder(
     }
 
     override fun end() {
-        if (recording) anRecording = Fun.whirl(bRecording, anRecording)
+        if (recording) handler?.obtainMessage(Action.TOGGLE.ordinal, false)?.sendToTarget()
         recording = false
         con = null
         ear?.interrupt()

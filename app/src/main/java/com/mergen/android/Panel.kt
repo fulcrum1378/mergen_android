@@ -1,5 +1,6 @@
 package com.mergen.android
 
+import android.animation.ObjectAnimator
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.*
@@ -21,6 +22,7 @@ class Panel : AppCompatActivity() {
     private val model: Model by viewModels()
     private lateinit var pro: Writer
     private lateinit var com: Controller
+    private var anRecording: ObjectAnimator? = null
 
     companion object {
         var handler: Handler? = null
@@ -70,13 +72,17 @@ class Panel : AppCompatActivity() {
                         )
                     }
                     Action.SOCKET_ERROR.ordinal -> com.socketError(msg.obj as Connect.Error)
+                    Action.TOGGLE.ordinal -> anRecording =
+                        if (msg.obj as Boolean) Fun.whirl(b.recording, null)
+                        else Fun.whirl(b.recording, anRecording)
+                    Action.FORCE_REC.ordinal -> com.rec.begin()
                 }
             }
         }
 
         // INITIALIZATION
         pro = Writer(this, model, b.response, b.resSV, b.say, b.send, b.sendIcon, b.sending)
-        com = Controller(this, b.preview, b.recording)
+        com = Controller(this, b.preview)
         b.record.setOnClickListener { com.toggle() }
         b.recording.colorFilter = Fun.cf(R.color.CPO)
     }
@@ -115,5 +121,5 @@ class Panel : AppCompatActivity() {
         }
     }
 
-    enum class Action { WRITE, TALK, RECORD, TOAST, QUERY, SOCKET_ERROR }
+    enum class Action { WRITE, TALK, RECORD, TOAST, QUERY, SOCKET_ERROR, TOGGLE, FORCE_REC }
 }

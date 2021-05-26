@@ -43,7 +43,7 @@ class Panel : AppCompatActivity() {
                         mp?.setOnPreparedListener { mp?.start() }
                         mp?.setOnCompletionListener { mp?.release(); mp = null }
                     }
-                    Action.RECORD.ordinal -> com.start()
+                    Action.RECORD.ordinal -> com.on()
                     Action.TOAST.ordinal -> try {
                         Toast.makeText(Fun.c, msg.obj as String, Toast.LENGTH_SHORT).show()
                     } catch (ignored: Exception) {
@@ -60,7 +60,7 @@ class Panel : AppCompatActivity() {
                             this@Panel, R.string.recConnect, R.string.recConnectIP, et, { _, _ ->
                                 try {
                                     val spl = et.text.toString().split(":")
-                                    Connect.acknowledged(spl[0], spl[1].toInt())
+                                    com.acknowledged(spl[0], spl[1].toInt())
                                 } catch (ignored: java.lang.Exception) {
                                     handler?.obtainMessage(
                                         Action.TOAST.ordinal, "Invalid address, please try again!"
@@ -77,22 +77,23 @@ class Panel : AppCompatActivity() {
         // INITIALIZATION
         pro = Writer(this, model, b.response, b.resSV, b.say, b.send, b.sendIcon, b.sending)
         com = Controller(this, b.preview, b.recording)
-        b.record.setOnClickListener { com.recToggle() }
+        b.record.setOnClickListener { com.toggle() }
         b.recording.colorFilter = Fun.cf(R.color.CPO)
     }
 
     override fun onResume() {
         super.onResume()
-        com.start()
+        com.on()
     }
 
     override fun onPause() {
         super.onPause()
-        com.stop()
+        com.off()
     }
 
     override fun onDestroy() {
-        com.pause()
+        com.end()
+        com.off()
         com.destroy()
         try {
             mp?.release()

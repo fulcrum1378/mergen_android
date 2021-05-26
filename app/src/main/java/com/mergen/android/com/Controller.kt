@@ -13,14 +13,20 @@ import com.mergen.android.otr.AlertDialogue
 
 class Controller(val that: Panel, bPreview: PreviewView, bRecording: ImageView) : ToRecord {
     private val rec = Recorder(that, bPreview, bRecording)
+    private var con = Connect()
 
     companion object {
         const val camPerm = Manifest.permission.CAMERA
         const val audPerm = Manifest.permission.RECORD_AUDIO
         const val req = 786
+        const val spHost = "host"
+        const val spPort = "port"
         const val socketErrorTO = 1000L
         val socketErrors = ArrayList<Connect.Error>()
         var socketErrorTimer: CountDownTimer? = null
+        var host = "127.0.0.1"
+        var port = 80
+        var isAcknowledged = false
     }
 
     init {
@@ -28,17 +34,29 @@ class Controller(val that: Panel, bPreview: PreviewView, bRecording: ImageView) 
             ActivityCompat.requestPermissions(that, arrayOf(camPerm, audPerm), req)
         else {
             rec.canPreview = true
-            rec.start()
+            rec.on()
+
+            var hasHost = Fun.sp.contains(spHost)
+            var hasPort = Fun.sp.contains(spPort)
+            if (!hasHost || !hasPort) Panel.handler?.obtainMessage(Panel.Action.QUERY.ordinal)
+                ?.sendToTarget()
+            else acknowledged(Fun.sp.getString(spHost, "127.0.0.1")!!, Fun.sp.getInt(spPort, 80))
         }
     }
 
-    fun recToggle() {
-        if (socketErrorTimer != null) return
-        if (!rec.recording) rec.resume() else rec.pause()
+    fun acknowledged(h: String, p: Int) {
+        host = h
+        port = p
+        Fun.sp.edit().apply {
+            putString(spHost, h)
+            putInt(spPort, p)
+            apply()
+        }
+        isAcknowledged = true
     }
 
     fun socketError(e: Connect.Error) {
-        rec.pause()
+        rec.end()
         rec.ear?.interrupt()
         socketErrors.add(e)
         socketErrorTimer?.cancel()
@@ -55,14 +73,18 @@ class Controller(val that: Panel, bPreview: PreviewView, bRecording: ImageView) 
     fun judgeSocketStatus() {
         var mustQuery = false
         var conProblem = false
-        var imgProblem = false
-        var audProblem = false
+        var whichSock = "UNKNOWN"
+        var whichAddr = whichSock
         var unknown: String? = null
         var sentNull = false
         for (e in socketErrors) {
-            //TODO: handle controller problems
-            if (e.portAdd == 1) imgProblem = true
-            else audProblem = true
+            whichAddr = "$host:${port + e.portAdd}"
+            whichSock = when (e.portAdd) {
+                0 -> "controller"
+                1 -> "picture"
+                2 -> "audio"
+                else -> whichSock
+            }
             when (e.e) {
                 "java.net.NoRouteToHostException", "java.net.UnknownHostException" ->
                     mustQuery = true
@@ -75,42 +97,50 @@ class Controller(val that: Panel, bPreview: PreviewView, bRecording: ImageView) 
             mustQuery -> Panel.handler?.obtainMessage(Panel.Action.QUERY.ordinal)?.sendToTarget()
             unknown != null -> AlertDialogue.alertDialogue1(
                 that, R.string.recConnectErr,
-                c.getString(R.string.recSocketUnknownErr, unknown)
+                c.getString(R.string.recSocketUnknownErr, unknown, whichSock)
             )
             sentNull -> AlertDialogue.alertDialogue1(
                 that, R.string.recConnectErr,
-                c.getString(R.string.recSocketSentNull, if (imgProblem) "picture" else "audio")
+                c.getString(R.string.recSocketSentNull, whichSock)
             )
-            conProblem -> {
-                if (imgProblem) AlertDialogue.alertDialogue1(
-                    that, R.string.recConnectErr,
-                    c.getString(R.string.recSocketImgErr, Connect.host + ":" + Connect.port)
-                )
-                if (audProblem) AlertDialogue.alertDialogue1(
-                    that, R.string.recConnectErr,
-                    c.getString(R.string.recSocketAudErr, Connect.host + ":" + (Connect.port + 1))
-                )
-            }
+            conProblem -> AlertDialogue.alertDialogue1(
+                that, R.string.recConnectErr,
+                c.getString(R.string.recSocketErr, whichSock, whichAddr)
+            )
         }
     }
 
-    override fun start() {
-        rec.start()
+
+    fun toggle() {
+        if (socketErrorTimer != null) return
+        if (!rec.recording) begin() else end()
     }
 
-    override fun resume() {
-        rec.resume()
+    override fun on() {
+        rec.on()
     }
 
-    override fun pause() {
-        rec.pause()
+    override fun begin() {
+        Thread { con.send(Notify.START.s) }.start()
+        rec.begin()
     }
 
-    override fun stop() {
-        rec.stop()
+    override fun end() {
+        Thread { con.send(Notify.STOP.s) }.start()
+        rec.end()
+    }
+
+    override fun off() {
+        rec.off()
     }
 
     override fun destroy() {
         rec.destroy()
+    }
+
+
+    enum class Notify(val s: ByteArray) {
+        START("start".encodeToByteArray()),
+        STOP("stop".encodeToByteArray())
     }
 }

@@ -48,7 +48,7 @@ class Recorder(
         val size = Size(800, 400)
     }
 
-    override fun start() {
+    override fun on() {
         if (!canPreview) return
         if (previewing) return
         previewing = true
@@ -87,20 +87,20 @@ class Recorder(
         }, ContextCompat.getMainExecutor(c))
     }
 
-    override fun stop() {
+    override fun off() {
         if (!previewing || !canPreview) return
         previewing = false
         preview.setSurfaceProvider(null)
         bPreview.removeAllViews()
     }
 
-    override fun resume() {
-        con = Connect(that, 1)
-        if (!Connect.isAcknowledged) return
+    override fun begin() {
+        con = Connect(1)
+        if (!Controller.isAcknowledged) return
         time = 0
         c.cacheDir.listFiles()?.forEach { it.delete() }
         recording = true
-        ear = Hearing(that).apply { start() }
+        ear = Hearing().apply { start() }
         anRecording = Fun.whirl(bRecording, null)
         capture()
     }
@@ -137,7 +137,7 @@ class Recorder(
         }.start()
     }
 
-    override fun pause() {
+    override fun end() {
         if (recording) anRecording = Fun.whirl(bRecording, anRecording)
         recording = false
         con = null

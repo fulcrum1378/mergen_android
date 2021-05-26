@@ -1,6 +1,5 @@
-package com.mergen.android.rec
+package com.mergen.android.com
 
-import android.Manifest
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.os.CountDownTimer
@@ -11,7 +10,6 @@ import android.widget.Toast
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.common.util.concurrent.ListenableFuture
 import com.mergen.android.Fun
@@ -29,7 +27,7 @@ class Recorder(
     val that: Panel,
     val bPreview: PreviewView,
     val bRecording: ImageView
-) {
+) : ToRecord {
     lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
     lateinit var cameraProvider: ProcessCameraProvider
     lateinit var useCaseGroup: UseCaseGroup
@@ -46,23 +44,11 @@ class Recorder(
     var anRecording: ObjectAnimator? = null
 
     companion object {
-        const val camPerm = Manifest.permission.CAMERA
-        const val audPerm = Manifest.permission.RECORD_AUDIO
-        const val req = 786
         const val FRAME = 50L
         val size = Size(800, 400)
     }
 
-    init {
-        if (!Fun.permGranted(camPerm) || !Fun.permGranted(audPerm))
-            ActivityCompat.requestPermissions(that, arrayOf(camPerm, audPerm), req)
-        else {
-            canPreview = true
-            this.start()
-        }
-    }
-
-    fun start() {
+    override fun start() {
         if (!canPreview) return
         if (previewing) return
         previewing = true
@@ -101,15 +87,15 @@ class Recorder(
         }, ContextCompat.getMainExecutor(c))
     }
 
-    fun stop() {
+    override fun stop() {
         if (!previewing || !canPreview) return
         previewing = false
         preview.setSurfaceProvider(null)
         bPreview.removeAllViews()
     }
 
-    fun resume() {
-        con = Connect(that)
+    override fun resume() {
+        con = Connect(that, 1)
         if (!Connect.isAcknowledged) return
         time = 0
         c.cacheDir.listFiles()?.forEach { it.delete() }
@@ -151,7 +137,7 @@ class Recorder(
         }.start()
     }
 
-    fun pause() {
+    override fun pause() {
         if (recording) anRecording = Fun.whirl(bRecording, anRecording)
         recording = false
         con = null
@@ -159,7 +145,7 @@ class Recorder(
         ear = null
     }
 
-    fun destroy() {
+    override fun destroy() {
         if (!canPreview) return
         cameraExecutor.shutdown()
     }

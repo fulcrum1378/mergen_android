@@ -1,4 +1,4 @@
-package com.mergen.android.rec
+package com.mergen.android.com
 
 import com.mergen.android.Fun
 import com.mergen.android.Fun.Companion.sp
@@ -7,7 +7,7 @@ import com.mergen.android.Panel.Companion.handler
 import java.lang.Exception
 import java.net.Socket
 
-class Connect(@Suppress("UNUSED_PARAMETER") that: Panel, val audioSocket: Boolean = false) {
+class Connect(@Suppress("UNUSED_PARAMETER") that: Panel, val portAdd: Int = 0) {
     companion object {
         const val spHost = "host"
         const val spPort = "port"
@@ -37,7 +37,7 @@ class Connect(@Suppress("UNUSED_PARAMETER") that: Panel, val audioSocket: Boolea
     fun send(data: ByteArray?) {
         if (data == null) error("false")
         else try {
-            var socket = Socket(host, port + (if (audioSocket) 1 else 0))
+            var socket = Socket(host, port + portAdd)
             var output = socket.getOutputStream()
             output.write(Fun.z(data.size.toString()).encodeToByteArray() + data)
             output.flush()
@@ -50,9 +50,9 @@ class Connect(@Suppress("UNUSED_PARAMETER") that: Panel, val audioSocket: Boolea
     }
 
     fun error(sent: String) {
-        handler?.obtainMessage(Panel.Action.SOCKET_ERROR.ordinal, Error(sent, audioSocket))
+        handler?.obtainMessage(Panel.Action.SOCKET_ERROR.ordinal, Error(sent, portAdd))
             ?.sendToTarget()
     }
 
-    data class Error(val e: String, val isAudio: Boolean)
+    data class Error(val e: String, val portAdd: Int)
 }

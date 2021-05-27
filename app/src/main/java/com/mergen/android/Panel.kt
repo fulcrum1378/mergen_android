@@ -16,6 +16,7 @@ import com.mergen.android.otr.AlertDialogue
 import com.mergen.android.pro.Writer
 
 // adb connect 192.168.1.4:
+// python3 main.py
 
 class Panel : AppCompatActivity() {
     private lateinit var b: PanelBinding

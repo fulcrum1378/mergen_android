@@ -88,7 +88,7 @@ class Recorder(val that: Panel, val bPreview: PreviewView) : ToRecord {
     }
 
     override fun begin() {
-        con = Connect(1)
+        con = Connect(Controller.visPort)
         if (!Controller.isAcknowledged) return
         time = 0
         c.cacheDir.listFiles()?.forEach { it.delete() }

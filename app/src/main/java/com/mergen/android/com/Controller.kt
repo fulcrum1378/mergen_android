@@ -11,7 +11,7 @@ import com.mergen.android.R
 import com.mergen.android.otr.AlertDialogue
 
 class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
-    private var con = Connect()
+    private var con = Connect(conPort)
     val rec = Recorder(that, bPreview)
 
     companion object {
@@ -21,6 +21,9 @@ class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
         const val spHost = "host"
         const val spPort = "port"
         const val socketErrorTO = 1000L
+        const val conPort = 0
+        const val visPort = 1
+        const val earPort = 2
         val socketErrors = ArrayList<Connect.Error>()
         var socketErrorTimer: CountDownTimer? = null
         var host = "127.0.0.1"
@@ -33,7 +36,7 @@ class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
             ActivityCompat.requestPermissions(that, arrayOf(camPerm, audPerm), req)
         else {
             rec.canPreview = true
-            rec.on()
+            on()
 
             var hasHost = Fun.sp.contains(spHost)
             var hasPort = Fun.sp.contains(spPort)
@@ -55,7 +58,7 @@ class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
     }
 
     fun socketError(e: Connect.Error) {
-        rec.end()
+        end()
         rec.ear?.interrupt()
         socketErrors.add(e)
         socketErrorTimer?.cancel()
@@ -79,9 +82,9 @@ class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
         for (e in socketErrors) {
             whichAddr = "$host:${port + e.portAdd}"
             whichSock = when (e.portAdd) {
-                0 -> "controller"
-                1 -> "picture"
-                2 -> "audio"
+                conPort -> "controller"
+                visPort -> "picture"
+                earPort -> "audio"
                 else -> whichSock
             }
             when (e.e) {

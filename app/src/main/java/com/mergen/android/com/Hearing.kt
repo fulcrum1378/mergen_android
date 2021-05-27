@@ -6,7 +6,7 @@ import android.media.MediaRecorder
 
 class Hearing : Thread() {
     private var recorder: AudioRecord? = null
-    private var con: Connect? = Connect(2)
+    private var con: Connect? = Connect(Controller.earPort)
     private val channelConfig = AudioFormat.CHANNEL_IN_MONO
     private val audioFormat = AudioFormat.ENCODING_PCM_16BIT
     private var buffer: ByteArray? = null

@@ -37,6 +37,7 @@ class Talker(
     }
 
     var result = true
+
     init {
         result = true
         if (said == "" || isSending) result = false
@@ -44,25 +45,29 @@ class Talker(
             sending(true)
             var got = "t=$said"
             Volley.newRequestQueue(c).add(
-                StringRequest(Request.Method.GET, encode("http://82.102.10.134/?$got"), { res ->
-                    sending(false)
-                    if (res.startsWith("Traceback "))
-                        AlertDialogue.alertDialogue1(that, R.string.proError, res)
-                    else {
-                        val temp = File(c.cacheDir, "response.wav")
-                        FileOutputStream(temp).apply {
-                            write(Base64.decode(res, Base64.DEFAULT))
-                            close()
+                StringRequest(
+                    Request.Method.GET,
+                    encode("http://82.102.10.134/pronouncer/?$got"),
+                    { res ->
+                        sending(false)
+                        if (res.startsWith("Traceback "))
+                            AlertDialogue.alertDialogue1(that, R.string.proError, res)
+                        else {
+                            val temp = File(c.cacheDir, "response.wav")
+                            FileOutputStream(temp).apply {
+                                write(Base64.decode(res, Base64.DEFAULT))
+                                close()
+                            }
+                            handler?.obtainMessage(Panel.Action.TALK.ordinal, temp.toUri())
+                                ?.sendToTarget()
+                            temp.deleteOnExit()
                         }
-                        handler?.obtainMessage(Panel.Action.TALK.ordinal, temp.toUri())
-                            ?.sendToTarget()
-                        temp.deleteOnExit()
-                    }
-                    model.res.value = said
-                }, {
-                    sending(false)
-                    Toast.makeText(c, "Connection failed: $it", Toast.LENGTH_SHORT).show()
-                }).setShouldCache(false).setTag("talk").setRetryPolicy(
+                        model.res.value = said
+                    },
+                    {
+                        sending(false)
+                        Toast.makeText(c, "Connection failed: $it", Toast.LENGTH_SHORT).show()
+                    }).setShouldCache(false).setTag("talk").setRetryPolicy(
                     DefaultRetryPolicy(
                         10000, 3, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
                     )

@@ -47,7 +47,7 @@ class Talker(
             Volley.newRequestQueue(c).add(
                 StringRequest(
                     Request.Method.GET,
-                    encode("http://82.102.10.134/pronouncer/?$got"),
+                    encode("http://pro.mahdiparastesh.ir?$got"),
                     { res ->
                         sending(false)
                         if (res.startsWith("Traceback "))

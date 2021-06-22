@@ -6,7 +6,7 @@ plugins {
 
 android {
     compileSdkVersion 30
-    buildToolsVersion "30.0.3"
+    buildToolsVersion "31.0.0-rc4"
 
     defaultConfig {
         applicationId "com.mergen.android"
@@ -55,10 +55,10 @@ dependencies {
     //implementation 'org.garret.perst:1.0.0'
     //implementation 'org.garret.perst.impl:1.0.0'
 
-    def camerax_version = "1.1.0-alpha04"
+    def camerax_version = "1.1.0-alpha05"
     implementation "androidx.camera:camera-core:${camerax_version}"
     implementation "androidx.camera:camera-camera2:${camerax_version}"
     implementation "androidx.camera:camera-lifecycle:${camerax_version}"
-    implementation "androidx.camera:camera-view:1.0.0-alpha24"
-    implementation "androidx.camera:camera-extensions:1.0.0-alpha24"
+    implementation "androidx.camera:camera-view:1.0.0-alpha25"
+    implementation "androidx.camera:camera-extensions:1.0.0-alpha25"
 }

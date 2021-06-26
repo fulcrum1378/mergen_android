@@ -46,7 +46,7 @@ class Panel : AppCompatActivity() {
                         mp?.setOnPreparedListener { mp?.start() }
                         mp?.setOnCompletionListener { mp?.release(); mp = null }
                     }
-                    Action.RECORD.ordinal -> com.on()
+                    //Action.RECORD.ordinal -> com.on()
                     Action.TOAST.ordinal -> try {
                         Toast.makeText(Fun.c, msg.obj as String, Toast.LENGTH_SHORT).show()
                     } catch (ignored: Exception) {
@@ -118,9 +118,9 @@ class Panel : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         val b = permResult(grantResults)
         when (requestCode) {
-            Controller.req -> if (b) handler?.obtainMessage(Action.RECORD.ordinal)?.sendToTarget()
+            Controller.req -> if (b) com.permitted()
         }
     }
 
-    enum class Action { WRITE, TALK, RECORD, TOAST, QUERY, SOCKET_ERROR, TOGGLE, FORCE_REC }
+    enum class Action { WRITE, TALK, TOAST, QUERY, SOCKET_ERROR, TOGGLE, FORCE_REC }
 }

@@ -34,16 +34,18 @@ class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
     init {
         if (!Fun.permGranted(camPerm) || !Fun.permGranted(audPerm))
             ActivityCompat.requestPermissions(that, arrayOf(camPerm, audPerm), req)
-        else {
-            rec.canPreview = true
-            on()
+        else permitted()
+    }
 
-            var hasHost = Fun.sp.contains(spHost)
-            var hasPort = Fun.sp.contains(spPort)
-            if (!hasHost || !hasPort) Panel.handler?.obtainMessage(Panel.Action.QUERY.ordinal)
-                ?.sendToTarget()
-            else acknowledged(Fun.sp.getString(spHost, "127.0.0.1")!!, Fun.sp.getInt(spPort, 80))
-        }
+    fun permitted() {
+        rec.canPreview = true
+        on()
+
+        var hasHost = Fun.sp.contains(spHost)
+        var hasPort = Fun.sp.contains(spPort)
+        if (!hasHost || !hasPort) Panel.handler?.obtainMessage(Panel.Action.QUERY.ordinal)
+            ?.sendToTarget()
+        else acknowledged(Fun.sp.getString(spHost, "127.0.0.1")!!, Fun.sp.getInt(spPort, 80))
     }
 
     fun acknowledged(h: String, p: Int) {

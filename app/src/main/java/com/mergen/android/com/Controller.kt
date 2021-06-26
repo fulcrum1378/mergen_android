@@ -142,6 +142,8 @@ class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
 
     override fun off() {
         rec.off()
+        Thread { con.send(Notify.KILL.s, foreword = false, receive = true) }.start()
+        // Move this to destroy() and implement Coroutines...
     }
 
     override fun destroy() {
@@ -151,6 +153,7 @@ class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
 
     enum class Notify(val s: ByteArray) {
         START("start".encodeToByteArray()),
-        STOP("stop".encodeToByteArray())
+        STOP("stop".encodeToByteArray()),
+        KILL("kill".encodeToByteArray())
     }
 }

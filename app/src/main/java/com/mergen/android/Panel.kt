@@ -46,7 +46,6 @@ class Panel : AppCompatActivity() {
                         mp?.setOnPreparedListener { mp?.start() }
                         mp?.setOnCompletionListener { mp?.release(); mp = null }
                     }
-                    //Action.RECORD.ordinal -> com.on()
                     Action.TOAST.ordinal -> try {
                         Toast.makeText(Fun.c, msg.obj as String, Toast.LENGTH_SHORT).show()
                     } catch (ignored: Exception) {

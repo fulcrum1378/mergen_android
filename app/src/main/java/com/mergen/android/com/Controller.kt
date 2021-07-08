@@ -24,6 +24,7 @@ class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
         const val conPort = 0
         const val visPort = 1
         const val earPort = 2
+        const val conTimeout = 1500L
         val socketErrors = ArrayList<Connect.Error>()
         var socketErrorTimer: CountDownTimer? = null
         var host = "127.0.0.1"
@@ -81,6 +82,8 @@ class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
         var whichAddr = whichSock
         var unknown: String? = null
         var sentNull = false
+        var timedOut = false
+        var wrongAnswer = false
         for (e in socketErrors) {
             whichAddr = "$host:${port + e.portAdd}"
             whichSock = when (e.portAdd) {
@@ -94,11 +97,14 @@ class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
                     mustQuery = true
                 "java.net.ConnectException" -> conProblem = true
                 "false" -> sentNull = true
+                "timedOut" -> timedOut = true
+                "wrongAnswer" -> wrongAnswer = true
                 else -> unknown = e.e
             }
         }
         when {
-            mustQuery -> Panel.handler?.obtainMessage(Panel.Action.QUERY.ordinal)?.sendToTarget()
+            mustQuery || timedOut || wrongAnswer ->
+                Panel.handler?.obtainMessage(Panel.Action.QUERY.ordinal)?.sendToTarget()
             unknown != null -> AlertDialogue.alertDialogue1(
                 that, R.string.recConnectErr,
                 c.getString(R.string.recSocketUnknownErr, unknown, whichSock)
@@ -127,10 +133,23 @@ class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
     }
 
     override fun begin() {
-        Thread {
+        var ended = false
+        val run = Thread {
             if (con.send(Notify.START.s, foreword = false, receive = true) == "true")
                 Panel.handler?.obtainMessage(Panel.Action.FORCE_REC.ordinal)?.sendToTarget()
+            else socketError(Connect.Error("wrongAnswer", port + con.portAdd))
+            ended = true
+        }
+        object : CountDownTimer(conTimeout, conTimeout) {
+            override fun onTick(millisUntilFinished: Long) {}
+            override fun onFinish() {
+                if (!ended) {
+                    run.interrupt()
+                    socketError(Connect.Error("timedOut", port + con.portAdd))
+                }
+            }
         }.start()
+        run.start()
         toggling = false
     }
 

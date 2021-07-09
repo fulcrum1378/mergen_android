@@ -8,7 +8,7 @@ class Hearing : Thread() {
     private var recorder: AudioRecord? = null
     private var con: Connect? = Connect(Controller.earPort)
     private val channelConfig = AudioFormat.CHANNEL_IN_MONO
-    private val audioFormat = AudioFormat.ENCODING_PCM_16BIT
+    private val audioFormat = AudioFormat.ENCODING_PCM_8BIT
     private var buffer: ByteArray? = null
     private var minBufSize =
         AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat)// 1000000
@@ -33,7 +33,9 @@ class Hearing : Thread() {
     override fun interrupt() {
         con = null
         status = false
+        recorder?.stop()
         recorder?.release()
+        recorder = null
         super.interrupt()
     }
 }

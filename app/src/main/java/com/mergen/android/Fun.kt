@@ -10,9 +10,6 @@ import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
-import android.os.Build
-import android.os.VibrationEffect
-import android.os.Vibrator
 import android.util.DisplayMetrics
 import android.view.View
 import android.view.animation.Animation
@@ -21,6 +18,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 
+@Suppress("unused")
 class Fun {
     companion object {
         @SuppressLint("StaticFieldLeak")
@@ -117,13 +115,14 @@ class Fun {
             level = percent * 100
         }
 
-        fun shake(dur: Long = 78L) {
+        /*fun shake(dur: Long = 78L) {
+            //<uses-permission android:name="android.permission.VIBRATE" />
             val v = c.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
             @Suppress("DEPRECATION")
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                 v.vibrate(VibrationEffect.createOneShot(dur, VibrationEffect.DEFAULT_AMPLITUDE))
             else v.vibrate(dur)
-        }
+        }*/
 
         fun permGranted(perm: String) =
             ActivityCompat.checkSelfPermission(c, perm) == PackageManager.PERMISSION_GRANTED

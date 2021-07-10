@@ -1,6 +1,7 @@
 package com.mergen.android
 
 import android.animation.ObjectAnimator
+import android.annotation.SuppressLint
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.*
@@ -38,6 +39,7 @@ class Panel : AppCompatActivity() {
 
         // Handlers
         handler = object : Handler(Looper.getMainLooper()) {
+            @SuppressLint("SetTextI18n")
             override fun handleMessage(msg: Message) {
                 when (msg.what) {
                     Action.WRITE.ordinal -> msg.obj?.let { b.say.setText("$it") }
@@ -56,7 +58,8 @@ class Panel : AppCompatActivity() {
                             setPadding(Fun.dp(18), Fun.dp(12), Fun.dp(18), Fun.dp(12))
                             textSize =
                                 this@Panel.resources.getDimension(R.dimen.alert1Title) / Fun.dm.density
-                            setText(R.string.recDefIP)
+                            setText(Fun.sp.getString(Controller.spHost, "127.0.0.1") +
+                                    ":${Fun.sp.getInt(Controller.spPort, 80)}")
                         }
                         AlertDialogue.alertDialogue2(
                             this@Panel, R.string.recConnect, R.string.recConnectIP, et, { _, _ ->

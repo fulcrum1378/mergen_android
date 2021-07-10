@@ -33,8 +33,8 @@ class Recorder(val that: Panel, val bPreview: PreviewView) : ToRecord {
     var previewing = false
     var recording = false
     var ear: Hearing? = null
-    var time = 0
-    var con: Connect? = null
+    var time: Long = 0L
+    var pool: StreamPool? = null
 
     companion object {
         const val FRAME = 50L
@@ -88,9 +88,9 @@ class Recorder(val that: Panel, val bPreview: PreviewView) : ToRecord {
     }
 
     override fun begin() {
-        con = Connect(Controller.visPort)
+        pool = StreamPool(Connect(Controller.visPort))
         if (!Controller.isAcknowledged) return
-        time = 0
+        time = 0L
         c.cacheDir.listFiles()?.forEach { it.delete() }
         recording = true
         ear = Hearing().apply { start() }
@@ -114,7 +114,7 @@ class Recorder(val that: Panel, val bPreview: PreviewView) : ToRecord {
                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                     if (!recording) return
                     FileInputStream(vis).use {
-                        con?.send(it.readBytes())
+                        pool?.add(StreamPool.Item(time, it.readBytes()))
                         it.close()
                     }
                     try {
@@ -135,7 +135,7 @@ class Recorder(val that: Panel, val bPreview: PreviewView) : ToRecord {
     override fun end() {
         if (recording) handler?.obtainMessage(Action.TOGGLE.ordinal, false)?.sendToTarget()
         recording = false
-        con = null
+        pool?.destroy() // Don't write "pool = null"
         ear?.interrupt()
         ear = null
     }

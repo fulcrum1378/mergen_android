@@ -6,13 +6,14 @@ import android.media.MediaRecorder
 
 class Hearing : Thread() {
     private var recorder: AudioRecord? = null
-    private var con: Connect? = Connect(Controller.earPort)
+    private var pool: StreamPool? = StreamPool(Connect(Controller.earPort))
     private val channelConfig = AudioFormat.CHANNEL_IN_MONO
-    private val audioFormat = AudioFormat.ENCODING_PCM_8BIT
+    private val audioFormat = AudioFormat.ENCODING_PCM_16BIT
     private var buffer: ByteArray? = null
     private var minBufSize =
         AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat)// 1000000
     private var status = true
+    private var time: Long = 0L
 
     companion object {
         const val sampleRate = 44100
@@ -21,17 +22,19 @@ class Hearing : Thread() {
     override fun run() {
         buffer = ByteArray(minBufSize)
         recorder = AudioRecord(
-            MediaRecorder.AudioSource.MIC, sampleRate, channelConfig, audioFormat, minBufSize * 10
+            MediaRecorder.AudioSource.MIC, sampleRate, channelConfig, audioFormat,
+            minBufSize * 10
         )
         recorder!!.startRecording()
         while (status) {
             minBufSize = recorder!!.read(buffer!!, 0, buffer!!.size)
-            con?.send(buffer)
+            pool?.add(StreamPool.Item(time, buffer!!))
+            time++
         }
     }
 
     override fun interrupt() {
-        con = null
+        pool?.destroy()
         status = false
         recorder?.stop()
         recorder?.release()

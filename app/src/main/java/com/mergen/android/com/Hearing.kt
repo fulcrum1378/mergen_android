@@ -13,7 +13,7 @@ class Hearing : Thread() {
         AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat)// 1000000
     private var time: Long = 0L
     var active = true
-    var pool: StreamPool? = StreamPool(Connect(Controller.earPort))
+    var pool = StreamPool(Connect(Controller.earPort))
 
     companion object {
         const val sampleRate = 44100
@@ -28,13 +28,12 @@ class Hearing : Thread() {
         recorder!!.startRecording()
         while (active) {
             minBufSize = recorder!!.read(buffer!!, 0, buffer!!.size)
-            pool?.add(StreamPool.Item(time, buffer!!))
+            pool.add(StreamPool.Item(time, buffer!!))
             time++
         }
     }
 
     override fun interrupt() {
-        pool?.destroy()
         active = false
         recorder?.stop()
         recorder?.release()

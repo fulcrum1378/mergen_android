@@ -20,7 +20,6 @@ import java.io.FileInputStream
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
-@SuppressLint("UnsafeExperimentalUsageError", "RestrictedApi", "UnsafeOptInUsageError")
 class Recorder(val that: Panel, val bPreview: PreviewView) : ToRecord {
     private lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
     private lateinit var cameraProvider: ProcessCameraProvider
@@ -34,13 +33,14 @@ class Recorder(val that: Panel, val bPreview: PreviewView) : ToRecord {
     var recording = false
     var ear: Hearing? = null
     var time: Long = 0L
-    var pool: StreamPool? = null
+    var pool: StreamPool = StreamPool(Connect(Controller.visPort))
 
     companion object {
         const val FRAME = 50L
         val size = Size(800, 400)
     }
 
+    @SuppressLint("RestrictedApi")
     override fun on() {
         if (!canPreview) return
         if (previewing) return
@@ -69,8 +69,7 @@ class Recorder(val that: Panel, val bPreview: PreviewView) : ToRecord {
                             Rational(Fun.dm.heightPixels, Fun.dm.widthPixels), // HEIGHT * WIDTH
                             that.resources.configuration.orientation
                         ).build()
-                    )
-                    .build()
+                    ).build()
                 cameraProvider.bindToLifecycle(that, cameraSelector, useCaseGroup)
                 // "CameraSelector.DEFAULT_BACK_CAMERA" instead of "cameraSelector"
             } catch (e: Exception) {
@@ -88,7 +87,6 @@ class Recorder(val that: Panel, val bPreview: PreviewView) : ToRecord {
     }
 
     override fun begin() {
-        pool = StreamPool(Connect(Controller.visPort))
         if (!Controller.isAcknowledged) return
         time = 0L
         c.cacheDir.listFiles()?.forEach { it.delete() }
@@ -114,7 +112,7 @@ class Recorder(val that: Panel, val bPreview: PreviewView) : ToRecord {
                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                     if (!recording) return
                     FileInputStream(vis).use {
-                        pool?.add(StreamPool.Item(time, it.readBytes()))
+                        pool.add(StreamPool.Item(time, it.readBytes()))
                         it.close()
                     }
                     try {
@@ -135,8 +133,8 @@ class Recorder(val that: Panel, val bPreview: PreviewView) : ToRecord {
     override fun end() {
         if (recording) handler?.obtainMessage(Action.TOGGLE.ordinal, false)?.sendToTarget()
         recording = false
-        pool?.destroy()
-        ear?.pool?.destroy()
+        pool.clear()
+        ear?.pool?.clear()
         ear?.interrupt()
         ear = null
     }
@@ -144,5 +142,7 @@ class Recorder(val that: Panel, val bPreview: PreviewView) : ToRecord {
     override fun destroy() {
         if (!canPreview) return
         cameraExecutor.shutdown()
+        pool.destroy()
+        ear?.pool?.destroy()
     }
 }

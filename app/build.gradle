@@ -13,7 +13,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 30
         versionCode 1
-        versionName '5.3'
+        versionName '5.4'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -52,6 +52,7 @@ dependencies {
 
     implementation 'com.android.volley:volley:1.2.0'
     implementation 'androidx.activity:activity-ktx:1.2.3'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.1'
 
     def camerax_version = "1.1.0-alpha06"
     implementation "androidx.camera:camera-core:${camerax_version}"

@@ -8,11 +8,7 @@ import java.io.InputStreamReader
 import java.net.Socket
 
 class Connect(val portAdd: Int = 0) {
-    fun send(
-        data: ByteArray?,
-        foreword: Boolean = true,
-        receive: Boolean = false
-    ): String? {
+    fun send(data: ByteArray?, foreword: Boolean = true, receive: Boolean = false): String? {
         var ret: String? = null
         if (data == null) error("false")
         else try {

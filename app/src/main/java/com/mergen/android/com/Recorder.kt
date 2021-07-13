@@ -15,6 +15,7 @@ import com.mergen.android.Fun.Companion.c
 import com.mergen.android.Panel
 import com.mergen.android.Panel.Action
 import com.mergen.android.Panel.Companion.handler
+import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.io.FileInputStream
 import java.util.concurrent.ExecutorService
@@ -36,7 +37,7 @@ class Recorder(val that: Panel, val bPreview: PreviewView) : ToRecord {
     var pool: StreamPool = StreamPool(Connect(Controller.visPort))
 
     companion object {
-        const val FRAME = 50L
+        const val FRAME = 1L // 50L
         val size = Size(800, 400)
     }
 
@@ -102,26 +103,28 @@ class Recorder(val that: Panel, val bPreview: PreviewView) : ToRecord {
         imageCapture.takePicture(ImageCapture.OutputFileOptions.Builder(vis).build(),
             cameraExecutor, object : ImageCapture.OnImageSavedCallback {
                 // NOT UI THREAD
-                override fun onError(error: ImageCaptureException) {
-                    if (!recording) return
-                    handler?.obtainMessage(
-                        Action.TOAST.ordinal, "ImageCaptureException: ${error.message}"
-                    )?.sendToTarget()
-                }
-
                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                     if (!recording) return
-                    FileInputStream(vis).use {
-                        pool.add(StreamPool.Item(time, it.readBytes()))
-                        it.close()
+                    runBlocking {
+                        FileInputStream(vis).use {
+                            pool.add(StreamPool.Item(time, it.readBytes()))
+                            it.close()
+                        }
                     }
                     try {
                         vis.delete()
                     } catch (e: Exception) {
                     }
                 }
+
+                override fun onError(error: ImageCaptureException) {
+                    if (!recording) return
+                    handler?.obtainMessage(
+                        Action.TOAST.ordinal, "ImageCaptureException: ${error.message}"
+                    )?.sendToTarget()
+                }
             })
-        time += 1
+        time++
         object : CountDownTimer(FRAME, FRAME) {
             override fun onTick(millisUntilFinished: Long) {}
             override fun onFinish() {

@@ -5,11 +5,14 @@ import com.mergen.android.Panel
 import com.mergen.android.Panel.Companion.handler
 import java.io.BufferedReader
 import java.io.InputStreamReader
-import java.lang.Exception
 import java.net.Socket
 
 class Connect(val portAdd: Int = 0) {
-    fun send(data: ByteArray?, foreword: Boolean = true, receive: Boolean = false): String? {
+    fun send(
+        data: ByteArray?,
+        foreword: Boolean = true,
+        receive: Boolean = false
+    ): String? {
         var ret: String? = null
         if (data == null) error("false")
         else try {
@@ -35,5 +38,5 @@ class Connect(val portAdd: Int = 0) {
             ?.sendToTarget()
     }
 
-    data class Error(val e: String, val portAdd: Int)
+    data class Error(val e: String, val portAdd: Int, val byController: Boolean = portAdd == 0)
 }

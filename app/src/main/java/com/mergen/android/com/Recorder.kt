@@ -12,9 +12,9 @@ import androidx.core.content.ContextCompat
 import com.google.common.util.concurrent.ListenableFuture
 import com.mergen.android.Fun
 import com.mergen.android.Fun.Companion.c
-import com.mergen.android.Panel.Companion.handler
 import com.mergen.android.Panel
 import com.mergen.android.Panel.Action
+import com.mergen.android.Panel.Companion.handler
 import java.io.File
 import java.io.FileInputStream
 import java.util.concurrent.ExecutorService
@@ -22,11 +22,11 @@ import java.util.concurrent.Executors
 
 @SuppressLint("UnsafeExperimentalUsageError", "RestrictedApi", "UnsafeOptInUsageError")
 class Recorder(val that: Panel, val bPreview: PreviewView) : ToRecord {
-    lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
-    lateinit var cameraProvider: ProcessCameraProvider
-    lateinit var useCaseGroup: UseCaseGroup
-    lateinit var preview: Preview
-    lateinit var imageCapture: ImageCapture
+    private lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
+    private lateinit var cameraProvider: ProcessCameraProvider
+    private lateinit var useCaseGroup: UseCaseGroup
+    private lateinit var preview: Preview
+    private lateinit var imageCapture: ImageCapture
     private lateinit var cameraSelector: CameraSelector
     private var cameraExecutor: ExecutorService = Executors.newSingleThreadExecutor()
     var canPreview = false
@@ -135,7 +135,8 @@ class Recorder(val that: Panel, val bPreview: PreviewView) : ToRecord {
     override fun end() {
         if (recording) handler?.obtainMessage(Action.TOGGLE.ordinal, false)?.sendToTarget()
         recording = false
-        pool?.destroy() // Don't write "pool = null"
+        pool?.destroy()
+        ear?.pool?.destroy()
         ear?.interrupt()
         ear = null
     }

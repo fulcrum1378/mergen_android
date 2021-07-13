@@ -7,8 +7,8 @@ import android.net.Uri
 import android.os.*
 import android.widget.EditText
 import android.widget.Toast
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import com.mergen.android.Fun.Companion.permResult
 import com.mergen.android.com.Connect
 import com.mergen.android.com.Controller
@@ -21,7 +21,7 @@ import com.mergen.android.pro.Writer
 
 class Panel : AppCompatActivity() {
     private lateinit var b: PanelBinding
-    private val model: Model by viewModels()
+    private lateinit var m: Model
     private lateinit var pro: Writer
     private lateinit var com: Controller
     private var anRecording: ObjectAnimator? = null
@@ -34,6 +34,7 @@ class Panel : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         b = PanelBinding.inflate(layoutInflater)
+        m = ViewModelProvider(this, Model.Factory()).get("Model", Model::class.java)
         setContentView(b.root)
         Fun.init(this, b.root)
 
@@ -84,7 +85,7 @@ class Panel : AppCompatActivity() {
         }
 
         // INITIALIZATION
-        pro = Writer(this, model, b.response, b.resSV, b.say, b.send, b.sendIcon, b.sending)
+        pro = Writer(this, m, b.response, b.resSV, b.say, b.send, b.sendIcon, b.sending)
         com = Controller(this, b.preview)
         b.record.setOnClickListener { com.toggle() }
         b.recording.colorFilter = Fun.cf(R.color.CPO)

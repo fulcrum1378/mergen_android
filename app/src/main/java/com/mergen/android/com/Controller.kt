@@ -46,7 +46,10 @@ class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
         var hasPort = Fun.sp.contains(spPort)
         if (!hasHost || !hasPort) Panel.handler?.obtainMessage(Panel.Action.QUERY.ordinal)
             ?.sendToTarget()
-        else acknowledged(Fun.sp.getString(spHost, "127.0.0.1")!!, Fun.sp.getInt(spPort, 80))
+        else acknowledged(
+            Fun.sp.getString(spHost, "127.0.0.1")!!,
+            Fun.sp.getInt(spPort, 80)
+        )
     }
 
     fun acknowledged(h: String, p: Int) {
@@ -61,8 +64,7 @@ class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
     }
 
     fun socketError(e: Connect.Error) {
-        end()
-        rec.ear?.interrupt()
+        if (!e.byController) end()
         socketErrors.add(e)
         socketErrorTimer?.cancel()
         socketErrorTimer = object : CountDownTimer(socketErrorTO, socketErrorTO) {
@@ -82,8 +84,6 @@ class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
         var whichAddr = whichSock
         var unknown: String? = null
         var sentNull = false
-        var timedOut = false
-        var wrongAnswer = false
         for (e in socketErrors) {
             whichAddr = "$host:${port + e.portAdd}"
             whichSock = when (e.portAdd) {
@@ -93,17 +93,15 @@ class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
                 else -> whichSock
             }
             when (e.e) {
-                "java.net.NoRouteToHostException", "java.net.UnknownHostException" ->
-                    mustQuery = true
+                "java.net.NoRouteToHostException", "java.net.UnknownHostException",
+                "timedOut", "wrongAnswer" -> mustQuery = true
                 "java.net.ConnectException" -> conProblem = true
                 "false" -> sentNull = true
-                "timedOut" -> timedOut = true
-                "wrongAnswer" -> wrongAnswer = true
                 else -> unknown = e.e
             }
         }
         when {
-            mustQuery || timedOut || wrongAnswer ->
+            mustQuery ->
                 Panel.handler?.obtainMessage(Panel.Action.QUERY.ordinal)?.sendToTarget()
             unknown != null -> AlertDialogue.alertDialogue1(
                 that, R.string.recConnectErr,
@@ -137,16 +135,17 @@ class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
         val run = Thread {
             if (con.send(Notify.START.s, foreword = false, receive = true) == "true")
                 Panel.handler?.obtainMessage(Panel.Action.FORCE_REC.ordinal)?.sendToTarget()
-            else socketError(Connect.Error("wrongAnswer", port + con.portAdd))
             ended = true
         }
         object : CountDownTimer(conTimeout, conTimeout) {
             override fun onTick(millisUntilFinished: Long) {}
             override fun onFinish() {
-                if (!ended) {
-                    run.interrupt()
-                    socketError(Connect.Error("timedOut", port + con.portAdd))
-                }
+                if (ended) return
+                run.interrupt()
+                Panel.handler?.obtainMessage(
+                    Panel.Action.SOCKET_ERROR.ordinal,
+                    Connect.Error("timedOut", port + con.portAdd)
+                )?.sendToTarget()
             }
         }.start()
         run.start()

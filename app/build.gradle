@@ -52,9 +52,6 @@ dependencies {
 
     implementation 'com.android.volley:volley:1.2.0'
     implementation 'androidx.activity:activity-ktx:1.2.3'
-    //implementation 'org.garret.perst:1.0.0'
-    //implementation 'org.garret.perst.impl:1.0.0'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.1'
 
     def camerax_version = "1.1.0-alpha06"
     implementation "androidx.camera:camera-core:${camerax_version}"
